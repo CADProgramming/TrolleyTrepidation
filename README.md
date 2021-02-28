@@ -4,6 +4,6 @@ Trolley Trepidation is 3D top down game following the daily job of a trolley per
 
 This will be our capstone project for our time at the BIT.
 
-Kanban board:
+Kanban board: 
 
-Design Doc:
+Wiki: [Github Wiki Page](https://github.com/CADProgramming/TrolleyTrepidation/wiki)
