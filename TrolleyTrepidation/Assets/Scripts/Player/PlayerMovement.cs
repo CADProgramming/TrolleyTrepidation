@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
-    private const float MAX_SPEED = 5.0f;   // Player top speed
+    private const float MAX_SPEED = 15.0f;   // Player top speed
     private const float MAX_MOTOR_TORQUE = 400;
     private const float MAX_STEERING_ANGLE = 30;
 
@@ -13,12 +13,21 @@ public class PlayerMovement : MonoBehaviour
     public WheelCollider leftSteeringWheel;     // Invisible left steering wheel
     public WheelCollider rightSteeringWheel;    // Invisible right steering wheel
 
+    public bool isMoving;
+    public bool isForwardPressed;
+
+    private Animator playerAnimator;
+    private Rigidbody playerRigidBody;
+
     private bool isPushingTrolley;  // Is the player attached to a trolley
 
     // Start is called before the first frame update
     void Start()
     {
         isPushingTrolley = false;
+
+        playerAnimator = GetComponent<Animator>();
+        playerRigidBody = GetComponent<Rigidbody>();
     }
 
     // Update is called once per frame
@@ -51,10 +60,39 @@ public class PlayerMovement : MonoBehaviour
     {
         float motor = MAX_MOTOR_TORQUE * Input.GetAxis("Vertical");
         float steering = MAX_STEERING_ANGLE * Input.GetAxis("Horizontal");
+        float currentSpeed = playerRigidBody.velocity.sqrMagnitude;
 
-        leftWheel.motorTorque = motor;
-        rightWheel.motorTorque = motor;
+        if (currentSpeed < MAX_SPEED)
+        {
+            leftWheel.motorTorque = motor;
+            rightWheel.motorTorque = motor;
+        }
+
         leftSteeringWheel.steerAngle = steering;
         rightSteeringWheel.steerAngle = steering;
+
+        if (playerAnimator)
+        {
+            isForwardPressed = motor > 0 || motor < 0;
+            isMoving = currentSpeed > 0.001f || currentSpeed < -0.001f;
+
+            playerAnimator.SetBool("isForwardPressed", isForwardPressed);
+            playerAnimator.SetBool("isMoving", isMoving);
+        }
+
+        AntiRoll();
+    }
+
+    private void AntiRoll()
+    {
+        if (transform.rotation.eulerAngles.x > 0)
+        {
+            transform.rotation = Quaternion.Euler(Quaternion.identity.x, transform.rotation.eulerAngles.y, transform.rotation.eulerAngles.z);
+        }
+
+        if (transform.rotation.eulerAngles.z > 0)
+        {
+            transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, transform.rotation.eulerAngles.y, Quaternion.identity.z);
+        }
     }
 }
