@@ -4,8 +4,8 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
-    private const float MAX_SPEED = 15.0f;   // Player top speed
-    private const float MAX_MOTOR_TORQUE = 400;
+    private const float MAX_SPEED = 40.0f;   // Player top speed
+    private const float MAX_MOTOR_TORQUE = 800;
     private const float MAX_STEERING_ANGLE = 30;
 
     public WheelCollider leftWheel;             // Forward motion left wheel
@@ -13,8 +13,7 @@ public class PlayerMovement : MonoBehaviour
     public WheelCollider leftSteeringWheel;     // Invisible left steering wheel
     public WheelCollider rightSteeringWheel;    // Invisible right steering wheel
 
-    public bool isMoving;
-    public bool isForwardPressed;
+    public float speed;
 
     private Animator playerAnimator;
     private Rigidbody playerRigidBody;
@@ -67,14 +66,21 @@ public class PlayerMovement : MonoBehaviour
             leftWheel.motorTorque = motor;
             rightWheel.motorTorque = motor;
         }
+        else
+        {
+            leftWheel.motorTorque = 0;
+            rightWheel.motorTorque = 0;
+        }
 
         leftSteeringWheel.steerAngle = steering;
         rightSteeringWheel.steerAngle = steering;
 
+        speed = currentSpeed;
+
         if (playerAnimator)
         {
-            isForwardPressed = motor > 0 || motor < 0;
-            isMoving = currentSpeed > 0.001f || currentSpeed < -0.001f;
+            bool isForwardPressed = motor > 0 || motor < 0;
+            bool isMoving = currentSpeed > 0.001f || currentSpeed < -0.001f;
 
             playerAnimator.SetBool("isForwardPressed", isForwardPressed);
             playerAnimator.SetBool("isMoving", isMoving);
