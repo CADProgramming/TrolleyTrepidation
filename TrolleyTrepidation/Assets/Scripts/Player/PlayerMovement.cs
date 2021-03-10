@@ -91,10 +91,6 @@ public class PlayerMovement : MonoBehaviour
         {
             transform.Translate(Vector3.forward * speed * Time.deltaTime);
         }
-        else
-        {
-            speed = (playerRigidBody.velocity.magnitude + speed) / 2;
-        }
         transform.Rotate(Vector3.up * steering * Time.deltaTime);
 
         if (playerAnimator)
@@ -126,12 +122,13 @@ public class PlayerMovement : MonoBehaviour
     {
         if (collision.gameObject.tag == "FixedObstacle")
         {
-            //hasCrashed = true;
+            hasCrashed = true;
+            speed = 0;
         }
     }
 
     private void OnCollisionExit(Collision collision)
     {
-        //hasCrashed = false;
+        hasCrashed = false;
     }
 }
