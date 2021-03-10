@@ -4,10 +4,10 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
-    private const float MAX_SPEED = 20.0f;   // Player top speed
-    private const float ROTATION = 30.0f;
-    private const float ACCEL = 1.0f;
-    private const float DEACCEL = 0.1f;
+    private const float MAX_SPEED = 5.0f;   // Player top speed
+    private const float ROTATION = 90.0f;
+    private const float ACCEL = 0.05f;
+    private const float DEACCEL = 0.003f;
 
     public float speed;
 
@@ -15,11 +15,13 @@ public class PlayerMovement : MonoBehaviour
     private Rigidbody playerRigidBody;
 
     private bool isPushingTrolley;  // Is the player attached to a trolley
+    private bool hasCrashed;
 
     // Start is called before the first frame update
     void Start()
     {
         isPushingTrolley = false;
+        hasCrashed = false;
 
         playerAnimator = GetComponent<Animator>();
         playerRigidBody = GetComponent<Rigidbody>();
@@ -56,34 +58,49 @@ public class PlayerMovement : MonoBehaviour
         float motor = ACCEL * Input.GetAxis("Vertical");
         float steering = ROTATION * Input.GetAxis("Horizontal");
         
-        if (speed < MAX_SPEED)
+        if (motor != 0)
         {
-            if (motor != 0)
-            {
-                speed += motor;
-            }
-            else if (speed > 0 && speed < DEACCEL ||
-                speed < 0 && speed > DEACCEL)
-            {
-                speed = 0;
-            }
-            else if (speed < 0)
-            {
-                speed += DEACCEL;
-            }
-            else if (speed > 0)
-            {
-                speed -= DEACCEL;
-            }
+            speed += motor;
+        }
+        else if ((speed > 0 && speed < DEACCEL) ||
+            (speed < 0 && speed > -DEACCEL))
+        {
+            speed = 0;
+        }
+        else if (speed < 0)
+        {
+            speed += DEACCEL;
+        }
+        else if (speed > 0)
+        {
+            speed -= DEACCEL;
         }
 
-        transform.Translate(Vector3.forward * speed * Time.deltaTime);
-        transform.Rotate(Vector3.up * ROTATION * Time.deltaTime);
+        if (speed > MAX_SPEED)
+        {
+            speed = MAX_SPEED;
+        }
+        else if (speed < -MAX_SPEED)
+        {
+            speed = -MAX_SPEED;
+        }
+
+        Debug.Log(speed);
+
+        if (!hasCrashed)
+        {
+            transform.Translate(Vector3.forward * speed * Time.deltaTime);
+        }
+        else
+        {
+            speed = (playerRigidBody.velocity.magnitude + speed) / 2;
+        }
+        transform.Rotate(Vector3.up * steering * Time.deltaTime);
 
         if (playerAnimator)
         {
             bool isForwardPressed = motor > 0 || motor < 0;
-            bool isMoving = speed > 0 || speed < 0;
+            bool isMoving = speed > 0.1f || speed < -0.1f;
 
             playerAnimator.SetBool("isForwardPressed", isForwardPressed);
             playerAnimator.SetBool("isMoving", isMoving);
@@ -107,9 +124,14 @@ public class PlayerMovement : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (collision.gameObject.tag != "Ground")
+        if (collision.gameObject.tag == "FixedObstacle")
         {
-            speed = 0;
+            //hasCrashed = true;
         }
+    }
+
+    private void OnCollisionExit(Collision collision)
+    {
+        //hasCrashed = false;
     }
 }
