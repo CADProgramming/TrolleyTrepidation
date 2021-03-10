@@ -4,10 +4,10 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
-    private const float MAX_SPEED = 5.0f;   // Player top speed
-    private const float ROTATION = 90.0f;
-    private const float ACCEL = 0.05f;
-    private const float DEACCEL = 0.003f;
+    private const float MAX_SPEED = 6.0f;   // Player top speed
+    private const float ROTATION = 120.0f;
+    private const float ACCEL = 0.15f;
+    private const float DEACCEL = 0.02f;
 
     public float speed;
 
@@ -28,7 +28,7 @@ public class PlayerMovement : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
+    void FixedUpdate()
     {
         UpdatePosition();
     }
@@ -84,8 +84,6 @@ public class PlayerMovement : MonoBehaviour
         {
             speed = -MAX_SPEED;
         }
-
-        Debug.Log(speed);
 
         if (!hasCrashed)
         {
