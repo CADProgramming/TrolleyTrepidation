@@ -4,14 +4,10 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
-    private const float MAX_SPEED = 40.0f;   // Player top speed
-    private const float MAX_MOTOR_TORQUE = 800;
-    private const float MAX_STEERING_ANGLE = 30;
-
-    public WheelCollider leftWheel;             // Forward motion left wheel
-    public WheelCollider rightWheel;            // Forward motion right wheel
-    public WheelCollider leftSteeringWheel;     // Invisible left steering wheel
-    public WheelCollider rightSteeringWheel;    // Invisible right steering wheel
+    private const float MAX_SPEED = 20.0f;   // Player top speed
+    private const float ROTATION = 30.0f;
+    private const float ACCEL = 1.0f;
+    private const float DEACCEL = 0.1f;
 
     public float speed;
 
@@ -57,30 +53,37 @@ public class PlayerMovement : MonoBehaviour
     // Moves the player without a trolley
     private void MovePlayer()
     {
-        float motor = MAX_MOTOR_TORQUE * Input.GetAxis("Vertical");
-        float steering = MAX_STEERING_ANGLE * Input.GetAxis("Horizontal");
-        float currentSpeed = playerRigidBody.velocity.sqrMagnitude;
-
-        if (currentSpeed < MAX_SPEED)
+        float motor = ACCEL * Input.GetAxis("Vertical");
+        float steering = ROTATION * Input.GetAxis("Horizontal");
+        
+        if (speed < MAX_SPEED)
         {
-            leftWheel.motorTorque = motor;
-            rightWheel.motorTorque = motor;
-        }
-        else
-        {
-            leftWheel.motorTorque = 0;
-            rightWheel.motorTorque = 0;
+            if (motor != 0)
+            {
+                speed += motor;
+            }
+            else if (speed > 0 && speed < DEACCEL ||
+                speed < 0 && speed > DEACCEL)
+            {
+                speed = 0;
+            }
+            else if (speed < 0)
+            {
+                speed += DEACCEL;
+            }
+            else if (speed > 0)
+            {
+                speed -= DEACCEL;
+            }
         }
 
-        leftSteeringWheel.steerAngle = steering;
-        rightSteeringWheel.steerAngle = steering;
-
-        speed = currentSpeed;
+        transform.Translate(Vector3.forward * speed * Time.deltaTime);
+        transform.Rotate(Vector3.up * ROTATION * Time.deltaTime);
 
         if (playerAnimator)
         {
             bool isForwardPressed = motor > 0 || motor < 0;
-            bool isMoving = currentSpeed > 0.001f || currentSpeed < -0.001f;
+            bool isMoving = speed > 0 || speed < 0;
 
             playerAnimator.SetBool("isForwardPressed", isForwardPressed);
             playerAnimator.SetBool("isMoving", isMoving);
@@ -99,6 +102,14 @@ public class PlayerMovement : MonoBehaviour
         if (transform.rotation.eulerAngles.z > 0)
         {
             transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, transform.rotation.eulerAngles.y, Quaternion.identity.z);
+        }
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject.tag != "Ground")
+        {
+            speed = 0;
         }
     }
 }
