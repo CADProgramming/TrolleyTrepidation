@@ -133,7 +133,7 @@ public class PlayerMovement : MonoBehaviour
         // Player hits fixed obstacle
         if (collision.gameObject.tag == "FixedObstacle")
         {
-            speed /= 2.0f;
+            speed = 0;
         }
     }
 }
