@@ -11,6 +11,7 @@ public class PlayerMovement : MonoBehaviour
 
     public float speed;     // Player movement speed
 
+    private Rigidbody playerBody;
     private Animator playerAnimator;    // Player animations
 
     private bool isPushingTrolley;  // Is the player attached to a trolley
@@ -22,6 +23,7 @@ public class PlayerMovement : MonoBehaviour
         isPushingTrolley = false;
         hasCrashed = false;
 
+        playerBody = GetComponent<Rigidbody>();
         playerAnimator = GetComponent<Animator>();
     }
 
@@ -91,11 +93,7 @@ public class PlayerMovement : MonoBehaviour
             speed = -MAX_SPEED;
         }
 
-        // Only move if not crashed
-        if (!hasCrashed)
-        {
-            transform.Translate(Vector3.forward * speed * Time.deltaTime);
-        }
+        transform.Translate(Vector3.forward * speed * Time.deltaTime);
         transform.Rotate(Vector3.up * steering * Time.deltaTime);
 
         // Update animation variables
@@ -130,20 +128,12 @@ public class PlayerMovement : MonoBehaviour
     }
 
     // When player enters into a collision
-    private void OnCollisionEnter(Collision collision)
+    private void OnCollisionStay(Collision collision)
     {
         // Player hits fixed obstacle
         if (collision.gameObject.tag == "FixedObstacle")
         {
-            // Stop moving
-            hasCrashed = true;
-            speed = 0;
+            speed /= 2.0f;
         }
-    }
-
-    // When player exits a collision
-    private void OnCollisionExit(Collision collision)
-    {
-        hasCrashed = false;
     }
 }
