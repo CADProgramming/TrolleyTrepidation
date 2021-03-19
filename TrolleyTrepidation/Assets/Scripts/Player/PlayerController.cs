@@ -7,15 +7,6 @@ public class PlayerController : MonoBehaviour
     private HashSet<GameObject> colliders = new HashSet<GameObject>();
     public HashSet<GameObject> GetColliders() { return colliders; }
 
-    private void OnTriggerExit(Collider other)
-    {
-        
-    }
-    public void OnTriggerEnter(Collider other)
-    {
-        colliders.Add(other.gameObject);
-       
-    }
     // Start is called before the first frame update
     void Start()
     {
@@ -26,5 +17,15 @@ public class PlayerController : MonoBehaviour
     void Update()
     {
 
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        colliders.Remove(other.gameObject);
+    }
+
+    public void OnTriggerEnter(Collider other)
+    {
+        colliders.Add(other.gameObject);
     }
 }
