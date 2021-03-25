@@ -30,4 +30,14 @@ public class PlayerController : MonoBehaviour
             
         }
     }
+
+    private void OnTriggerExit(Collider other)
+    {
+        colliders.Remove(other.gameObject);
+    }
+
+    public void OnTriggerEnter(Collider other)
+    {
+        colliders.Add(other.gameObject);
+    }
 }
