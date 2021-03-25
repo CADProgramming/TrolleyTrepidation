@@ -1930,13 +1930,6 @@ Transform:
   m_LocalPosition: {x: -3.535533, y: -0.48000002, z: -0.1838479}
   m_LocalScale: {x: 10, y: 5, z: 1}
   m_Children: []
-<<<<<<< HEAD
-  m_Father: {fileID: 615156124}
-  m_RootOrder: 14
-=======
-  m_Father: {fileID: 0}
-  m_RootOrder: 20
->>>>>>> parent of 2264d94 (Moved trolleys out of floor)
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &541001948 stripped
 GameObject:
@@ -2310,13 +2303,6 @@ Transform:
   m_LocalPosition: {x: 16.857426, y: -0.48000002, z: 12.628931}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
-<<<<<<< HEAD
-  m_Father: {fileID: 615156124}
-  m_RootOrder: 23
-=======
-  m_Father: {fileID: 0}
-  m_RootOrder: 21
->>>>>>> parent of 2264d94 (Moved trolleys out of floor)
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &705507993
 GameObject:
@@ -2937,13 +2923,6 @@ Transform:
   m_LocalPosition: {x: 10.422757, y: -0.48000002, z: -5.3598695}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
-<<<<<<< HEAD
-  m_Father: {fileID: 615156124}
-  m_RootOrder: 13
-=======
-  m_Father: {fileID: 0}
-  m_RootOrder: 19
->>>>>>> parent of 2264d94 (Moved trolleys out of floor)
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &963194225
 GameObject:
@@ -4287,13 +4266,6 @@ Transform:
   m_LocalPosition: {x: 4.6456923, y: -0.48000002, z: 0.4171934}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
-<<<<<<< HEAD
-  m_Father: {fileID: 615156124}
-  m_RootOrder: 16
-=======
-  m_Father: {fileID: 0}
-  m_RootOrder: 18
->>>>>>> parent of 2264d94 (Moved trolleys out of floor)
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1492572618 stripped
 GameObject:
@@ -4444,13 +4416,6 @@ Transform:
   m_LocalPosition: {x: 7.771103, y: 12.32, z: 7.756963}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
-<<<<<<< HEAD
-  m_Father: {fileID: 615156124}
-  m_RootOrder: 21
-=======
-  m_Father: {fileID: 0}
-  m_RootOrder: 23
->>>>>>> parent of 2264d94 (Moved trolleys out of floor)
   m_LocalEulerAnglesHint: {x: 45, y: 0, z: 0}
 --- !u!20 &1528478307
 Camera:
@@ -5520,11 +5485,6 @@ Transform:
   m_LocalPosition: {x: 1.4707808, y: -0.48000002, z: 9.927781}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
-<<<<<<< HEAD
-  m_Father: {fileID: 615156124}
-=======
-  m_Father: {fileID: 0}
->>>>>>> parent of 2264d94 (Moved trolleys out of floor)
   m_RootOrder: 19
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2123402414
