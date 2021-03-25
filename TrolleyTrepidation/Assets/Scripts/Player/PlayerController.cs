@@ -9,12 +9,11 @@ public class PlayerController : MonoBehaviour
 
     private void OnTriggerExit(Collider other)
     {
-        
+        colliders.Remove(other.gameObject);
     }
     public void OnTriggerEnter(Collider other)
     {
         colliders.Add(other.gameObject);
-       
     }
     // Start is called before the first frame update
     void Start()
@@ -25,6 +24,10 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
+        if (Input.GetKeyDown(KeyCode.K))
+        {
+            Debug.Log("K is pressed");
+            
+        }
     }
 }

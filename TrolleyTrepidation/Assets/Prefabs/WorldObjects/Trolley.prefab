@@ -772,7 +772,6 @@ GameObject:
   - component: {fileID: 8711447165880237401}
   - component: {fileID: 5713551286399464188}
   - component: {fileID: 7543084994466416182}
-  - component: {fileID: 8335766700929557533}
   - component: {fileID: 8335766700929557535}
   - component: {fileID: 8335766700929557534}
   - component: {fileID: 7175960046016632900}
@@ -847,29 +846,6 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
---- !u!114 &8335766700929557533
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8335766700929558499}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 31b98c9845c774140b2c98c996b829fd, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  axleInfos:
-  - leftWheel: {fileID: 4976289075532325731}
-    rightWheel: {fileID: 919543792779014631}
-    motor: 0
-    steering: 0
-  - leftWheel: {fileID: 7615792394076141381}
-    rightWheel: {fileID: 1384608369821524513}
-    motor: 0
-    steering: 0
-  maxMotorTorque: 10
-  maxSteeringAngle: 30
 --- !u!65 &8335766700929557535
 BoxCollider:
   m_ObjectHideFlags: 0
