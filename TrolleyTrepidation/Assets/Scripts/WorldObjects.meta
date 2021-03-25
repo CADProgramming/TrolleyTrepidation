@@ -1,5 +1,9 @@
 fileFormatVersion: 2
+<<<<<<< HEAD
 guid: 7ec1e519f0259ed44aed696583b49330
+=======
+guid: d66dd77afd91923448da6747feaa49bf
+>>>>>>> parent of 2264d94 (Moved trolleys out of floor)
 folderAsset: yes
 DefaultImporter:
   externalObjects: {}
