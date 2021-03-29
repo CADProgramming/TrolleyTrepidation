@@ -36,15 +36,13 @@ public class PlayerController : MonoBehaviour
         }
     }
     void pickup()
-    {
-        
+    {        
         item.transform.position = guide.transform.localPosition + guide.transform.rotation * Vector3.forward;
         item.transform.rotation = guide.transform.localRotation;
         item.transform.parent = tempParent.transform;
     }
     void drop()
-    {
-        
+    {        
         item.transform.parent = null;
         item.transform.position = guide.transform.position;
     }
