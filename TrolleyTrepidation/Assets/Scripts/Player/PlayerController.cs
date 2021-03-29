@@ -37,16 +37,14 @@ public class PlayerController : MonoBehaviour
     }
     void pickup()
     {
-        item.GetComponent<Rigidbody>().useGravity = false;
-        item.GetComponent<Rigidbody>().isKinematic = true;
-        item.transform.position = guide.transform.position;
-        item.transform.rotation = guide.transform.rotation;
+        
+        item.transform.position = guide.transform.localPosition + guide.transform.rotation * Vector3.forward;
+        item.transform.rotation = guide.transform.localRotation;
         item.transform.parent = tempParent.transform;
     }
     void drop()
     {
-        item.GetComponent<Rigidbody>().useGravity = true;
-        item.GetComponent<Rigidbody>().isKinematic = false;
+        
         item.transform.parent = null;
         item.transform.position = guide.transform.position;
     }
