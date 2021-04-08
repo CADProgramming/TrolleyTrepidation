@@ -7,22 +7,29 @@ public class CarMovement : MonoBehaviour
 {
     private const float FORWARD_SPEED = 2.0f;
     private const float REVERSE_SPEED = 1.0f;
-    private const float REVERSE_DISTANCE = 3.0f;
+    private const float REVERSE_DISTANCE = 2.5f;
     private const float ROTATION_SPEED = 20.0f;
+    private const float VECTOR_MATCH = 0.9f;
+    private const float NODE_TOLERANCE = 0.2f;
 
     public Transform goal;
+    public GameObject path;
 
     private float degreesOfRotation;
+    private bool atNextNode;
     private Vector3 forwardVector;
     private Vector3 reverseVector;
     private Vector3 reverseLocation;
     private CarState movementState;
 
-    NavMeshAgent agent;
+    private GameObject nextNode;
+    private NavMeshAgent agent;
 
     void Start()
     {
         degreesOfRotation = 0;
+        atNextNode = true;
+        nextNode = null;
 
         movementState = CarState.REVERSING;
         reverseLocation = transform.position + REVERSE_DISTANCE * (transform.rotation * Vector3.back);
@@ -48,6 +55,9 @@ public class CarMovement : MonoBehaviour
             case CarState.FORWARD_TURN:
                 AlignWithPath();
                 break;
+            case CarState.AUTO:
+                FollowPath();
+                break;
         }
     }
 
@@ -55,7 +65,7 @@ public class CarMovement : MonoBehaviour
     private void ReverseOutOfPark()
     {
         // Reverse a fixed distance to a location
-        if (transform.position.magnitude - reverseLocation.magnitude > 0.1f)
+        if (Mathf.Abs(transform.position.magnitude - reverseLocation.magnitude) > 0.1f)
         {
             transform.position += transform.rotation * reverseVector * Time.deltaTime;
         }
@@ -95,7 +105,77 @@ public class CarMovement : MonoBehaviour
         {
             movementState = CarState.AUTO;
             agent.enabled = true;
-            agent.destination = goal.position;
         }
+    }
+
+    private void FollowPath()
+    {
+        if (atNextNode)
+        {
+            Transform nextLocation;
+
+            if (nextNode)
+            {
+                nextLocation = FindNextNode();
+            }
+            else
+            {
+                nextLocation = FindNearestNode();
+            }
+
+            agent.destination = nextLocation.position;
+        }
+
+        atNextNode = IsAtNextNode();
+    }
+
+    private Transform FindNextNode()
+    {
+        NodeController nodeController = nextNode.GetComponent<NodeController>();
+        GameObject newNode = nodeController.nextNodes[0];
+        float minDistanceToGoal = Vector3.Distance(newNode.transform.position, goal.position);
+
+        foreach (GameObject node in nodeController.nextNodes)
+        {
+            float distanceToGoal = Vector3.Distance(node.transform.position, goal.position);
+
+            if (distanceToGoal < minDistanceToGoal)
+            {
+                minDistanceToGoal = distanceToGoal;
+                newNode = node;
+            }
+        }
+
+        nextNode = newNode;
+
+        return newNode.transform;
+    }
+
+    private Transform FindNearestNode()
+    {
+        float minDistance = 0;
+        GameObject closestNode = null;
+
+        foreach (Transform node in path.transform)
+        {
+            float distanceToNode = Vector3.Distance(node.position, transform.position);
+
+            if ((!closestNode || distanceToNode < minDistance) &&
+                Vector3.Dot(node.position.normalized, transform.position.normalized) > VECTOR_MATCH)
+            {
+                minDistance = distanceToNode;
+                closestNode = node.gameObject;
+            }
+        }
+
+        nextNode = closestNode;
+
+        return closestNode.transform;
+    }
+
+    private bool IsAtNextNode()
+    {
+        float distanceToNextNode = Mathf.Abs(Vector3.Distance(transform.position, nextNode.transform.position));
+        return distanceToNextNode < NODE_TOLERANCE;
     }
 }
