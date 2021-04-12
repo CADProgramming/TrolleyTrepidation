@@ -9,7 +9,7 @@ public class CarMovement : MonoBehaviour
     private const float REVERSE_SPEED = 1.0f;
     private const float REVERSE_DISTANCE = 2.5f;
     private const float ROTATION_SPEED = 20.0f;
-    private const float VECTOR_MATCH = 0.9f;
+    private const float VECTOR_MATCH = 0.8f;
     private const float NODE_TOLERANCE = 0.2f;
 
     public Transform goal;
@@ -159,9 +159,11 @@ public class CarMovement : MonoBehaviour
         foreach (Transform node in path.transform)
         {
             float distanceToNode = Vector3.Distance(node.position, transform.position);
+            float similarity = Vector3.Dot((node.position - transform.position).normalized, (transform.rotation * Vector3.forward).normalized);
+            float test = Vector3.Dot(Vector3.forward.normalized, Vector3.back.normalized);
 
             if ((!closestNode || distanceToNode < minDistance) &&
-                Vector3.Dot(node.position.normalized, transform.position.normalized) > VECTOR_MATCH)
+                similarity > VECTOR_MATCH)
             {
                 minDistance = distanceToNode;
                 closestNode = node.gameObject;
