@@ -1,2 +1,0 @@
-bring lines back 2 clicks of the pencil
-right line should start half way through the next line

@@ -9,18 +9,25 @@ public class CarMovement : MonoBehaviour
     private const float REVERSE_SPEED = 1.0f;
     private const float REVERSE_DISTANCE = 2.5f;
     private const float ROTATION_SPEED = 20.0f;
+    private const float PARK_ROTATION_SPEED = 23.5f;
     private const float VECTOR_MATCH = 0.8f;
+    private const float PARK_VECTOR_MATCH = 0.96f;
     private const float NODE_TOLERANCE = 0.2f;
+    private const float MIN_PARK_DIST = 15.0f;
 
     public Transform goal;
     public GameObject path;
 
     private float degreesOfRotation;
     private bool atNextNode;
+    private bool readyToPark;
+    private bool parkClose;
     private Vector3 forwardVector;
     private Vector3 reverseVector;
     private Vector3 reverseLocation;
-    private CarState movementState;
+    private Vector3 parkEntranceLocation;
+    private CarEnteringState enteringState;
+    private CarLeavingState leavingState;
 
     private GameObject nextNode;
     private NavMeshAgent agent;
@@ -29,35 +36,55 @@ public class CarMovement : MonoBehaviour
     {
         degreesOfRotation = 0;
         atNextNode = true;
+        readyToPark = false;
+        parkClose = true;
         nextNode = null;
 
-        movementState = CarState.REVERSING;
+        enteringState = CarEnteringState.AUTO;
+        leavingState = CarLeavingState.STOPPED;
         reverseLocation = transform.position + REVERSE_DISTANCE * (transform.rotation * Vector3.back);
         forwardVector = FORWARD_SPEED * Vector3.forward;
         reverseVector = REVERSE_SPEED * Vector3.back;
         agent = GetComponent<NavMeshAgent>();
-        agent.enabled = false;
+        agent.enabled = true;
     }
 
     private void Update()
     {
-        switch (movementState)
+        if (enteringState != CarEnteringState.STOPPED)
         {
-            // Car reversing out of park
-            case CarState.REVERSING:
-                ReverseOutOfPark();
-                break;
-            // Car reversing and turning out of park
-            case CarState.REVERSE_TURN:
-                ReverseAndTurnOutOfPark();
-                break;
-            // Car moving forward and turning after exiting park
-            case CarState.FORWARD_TURN:
-                AlignWithPath();
-                break;
-            case CarState.AUTO:
-                FollowPath();
-                break;
+            switch (enteringState)
+            {
+                // Car navigating car park
+                case CarEnteringState.AUTO:
+                    FollowPathIn();
+                    break;
+                // Car moving forward and turning to enter park
+                case CarEnteringState.FORWARD_TURN:
+                    EnterPark();
+                    break;
+            }
+        }
+        else if (leavingState != CarLeavingState.STOPPED)
+        {
+            switch (leavingState)
+            {
+                // Car reversing out of park
+                case CarLeavingState.REVERSING:
+                    ReverseOutOfPark();
+                    break;
+                // Car reversing and turning out of park
+                case CarLeavingState.REVERSE_TURN:
+                    ReverseAndTurnOutOfPark();
+                    break;
+                // Car moving forward and turning after exiting park
+                case CarLeavingState.FORWARD_TURN:
+                    AlignWithPath();
+                    break;
+                case CarLeavingState.AUTO:
+                    FollowPathOut();
+                    break;
+            }
         }
     }
 
@@ -71,7 +98,7 @@ public class CarMovement : MonoBehaviour
         }
         else
         {
-            movementState = CarState.REVERSE_TURN;
+            leavingState = CarLeavingState.REVERSE_TURN;
         }
     }
 
@@ -87,7 +114,7 @@ public class CarMovement : MonoBehaviour
         }
         else
         {
-            movementState = CarState.FORWARD_TURN;
+            leavingState = CarLeavingState.FORWARD_TURN;
         }
     }
 
@@ -103,12 +130,46 @@ public class CarMovement : MonoBehaviour
         }
         else
         {
-            movementState = CarState.AUTO;
+            leavingState = CarLeavingState.AUTO;
             agent.enabled = true;
         }
     }
 
-    private void FollowPath()
+    private void EnterPark()
+    {
+        // Gradually move forward and turn until a degree of rotation is achieved
+        if (degreesOfRotation < 90)
+        {
+            if (parkClose)
+            {
+                transform.Rotate(Vector3.up, -PARK_ROTATION_SPEED * Time.deltaTime);
+                transform.position += transform.rotation * forwardVector * Time.deltaTime;
+            }
+            else
+            {
+                transform.Rotate(Vector3.up, PARK_ROTATION_SPEED * Time.deltaTime);
+                transform.position += transform.rotation * (forwardVector * 1.65f) * Time.deltaTime;
+            }
+            degreesOfRotation += PARK_ROTATION_SPEED * Time.deltaTime;
+        }
+        else
+        {
+            if (Mathf.Abs(Vector3.Distance(transform.position, goal.position)) > NODE_TOLERANCE)
+            {
+                agent.angularSpeed = 0;
+                agent.enabled = true;
+                agent.destination = goal.position;
+            }
+            else
+            {
+                agent.angularSpeed = 100;
+                agent.enabled = false;
+                enteringState = CarEnteringState.STOPPED;
+            }
+        }
+    }
+
+    private void FollowPathOut()
     {
         if (atNextNode)
         {
@@ -127,6 +188,75 @@ public class CarMovement : MonoBehaviour
         }
 
         atNextNode = IsAtNextNode();
+    }
+
+    private bool CanReachGoalEntrance(Vector3 goalEntrance)
+    {
+        float similarity = Vector3.Dot((goalEntrance - transform.position).normalized, (transform.rotation * Vector3.forward).normalized);
+
+        return Mathf.Abs(Vector3.Distance(transform.position, nextNode.transform.position)) >
+            Mathf.Abs(Vector3.Distance(transform.position, goalEntrance)) &&
+            similarity > PARK_VECTOR_MATCH;
+    }    
+
+    private void CheckCanPark()
+    {
+        if (Mathf.Abs(Vector3.Distance(transform.position, goal.transform.position)) < MIN_PARK_DIST)
+        {
+            ParkNodeController parkInfo = goal.GetComponent<ParkNodeController>();
+
+            bool canEnterClose = CanReachGoalEntrance(parkInfo.closeEntrance);
+            bool canEnterFar = CanReachGoalEntrance(parkInfo.farEntrance);
+            readyToPark = canEnterClose || canEnterFar;
+            parkClose = canEnterClose &&
+                Mathf.Abs(Vector3.Distance(transform.position, parkInfo.closeEntrance)) <
+                Mathf.Abs(Vector3.Distance(transform.position, parkInfo.farEntrance));
+
+            if (parkClose)
+            {
+                parkEntranceLocation = parkInfo.closeEntrance;
+            }
+            else if (canEnterFar)
+            {
+                parkEntranceLocation = parkInfo.farEntrance;
+            }
+
+            if (readyToPark)
+            {
+                agent.destination = parkEntranceLocation;
+            }
+        }
+    }
+
+    private void FollowPathIn()
+    {
+        CheckCanPark();
+
+        if (readyToPark && IsAtParkEntrance())
+        {
+            enteringState = CarEnteringState.FORWARD_TURN;
+            agent.enabled = false;
+        }
+        else
+        {
+            if (atNextNode)
+            {
+                Transform nextLocation;
+
+                if (nextNode)
+                {
+                    nextLocation = FindNextNode();
+                }
+                else
+                {
+                    nextLocation = FindNearestNode();
+                }
+
+                agent.destination = nextLocation.position;
+            }
+
+            atNextNode = IsAtNextNode();
+        }
     }
 
     private Transform FindNextNode()
@@ -160,7 +290,6 @@ public class CarMovement : MonoBehaviour
         {
             float distanceToNode = Vector3.Distance(node.position, transform.position);
             float similarity = Vector3.Dot((node.position - transform.position).normalized, (transform.rotation * Vector3.forward).normalized);
-            float test = Vector3.Dot(Vector3.forward.normalized, Vector3.back.normalized);
 
             if ((!closestNode || distanceToNode < minDistance) &&
                 similarity > VECTOR_MATCH)
@@ -178,6 +307,12 @@ public class CarMovement : MonoBehaviour
     private bool IsAtNextNode()
     {
         float distanceToNextNode = Mathf.Abs(Vector3.Distance(transform.position, nextNode.transform.position));
+        return distanceToNextNode < NODE_TOLERANCE;
+    }
+
+    private bool IsAtParkEntrance()
+    {
+        float distanceToNextNode = Mathf.Abs(Vector3.Distance(transform.position, parkEntranceLocation));
         return distanceToNextNode < NODE_TOLERANCE;
     }
 }
