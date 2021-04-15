@@ -93,7 +93,7 @@ public class PlayerMovementNew : MonoBehaviour
     {
         if (bodyParts.Count == 1)
         {
-            Transform newpart = (Instantiate(bodyprefabs, transform.position, transform.rotation) as GameObject).transform;
+            Transform newpart = (Instantiate(bodyprefabs, transform.position., transform.rotation) as GameObject).transform;
             newpart.SetParent(transform);
 
             bodyParts.Add(newpart);
