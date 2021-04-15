@@ -2908,7 +2908,7 @@ MonoBehaviour:
   item: {fileID: 8335766700929558499, guid: 46852da7a4592144b819156ea4466ee3, type: 3}
   tempParent: {fileID: 1193273708}
   guide: {fileID: 1193273715}
-  carrying: 0
+  carrying: []
   distance: 1.5
 --- !u!1001 &1249578338
 PrefabInstance:
@@ -5364,12 +5364,28 @@ PrefabInstance:
       propertyPath: m_IsTrigger
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3823230682406047868, guid: 5d84828ae6655014382ee53f12d71500,
+        type: 3}
+      propertyPath: m_UseGravity
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3823230682406047868, guid: 5d84828ae6655014382ee53f12d71500,
+        type: 3}
+      propertyPath: m_Constraints
+      value: 84
+      objectReference: {fileID: 0}
+    - target: {fileID: 3823230682406047868, guid: 5d84828ae6655014382ee53f12d71500,
+        type: 3}
+      propertyPath: m_IsKinematic
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 4165743743384854057, guid: 5d84828ae6655014382ee53f12d71500,
         type: 3}
       propertyPath: m_Name
       value: Robot
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 3823230682406047868, guid: 5d84828ae6655014382ee53f12d71500, type: 3}
   m_SourcePrefab: {fileID: 100100000, guid: 5d84828ae6655014382ee53f12d71500, type: 3}
 --- !u!1001 &7722441769526907998
 PrefabInstance:

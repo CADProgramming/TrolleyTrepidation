@@ -11,7 +11,7 @@ public class SpawnController : MonoBehaviour
     void Start()
     {
         arrayTrolleys = new GameObject[51];
-        for(int i = 0; i < 3; i++)
+        for(int i = 0; i < 10; i++)
         {
             arrayTrolleys[i] = Instantiate(myPrefab, SpawnRandomLocation(), Quaternion.identity);
         }

@@ -33,23 +33,10 @@ public class PlayerMovement : MonoBehaviour
 
     // Updates the player's position
     private void UpdatePosition()
-    {
-        if (isPushingTrolley)
-        {
-            // Player movement with a trolley
-            MoveWithTrolley();
-        }
-        else
-        {
-            // Player movement without a trolley
-            MovePlayer();
-        }
-    }
-
-    // Moves the player and the trolley/trolley chain
-    private void MoveWithTrolley()
-    {
-
+    {     
+        // Player movement without a trolley
+        MovePlayer();
+        
     }
 
     // Moves the player without a trolley
