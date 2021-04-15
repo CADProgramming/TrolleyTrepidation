@@ -8,11 +8,7 @@ public class TrolleyHandleTrigger : MonoBehaviour
 
     public void OnTriggerEnter(Collider other)
     {
-        if (other.name == "Robot")
-        {
-            transform.parent = other.transform;
-        }
-        
+                
     }
     // Start is called before the first frame update
     void Start()
@@ -61,7 +57,7 @@ public class TrolleyHandleTrigger : MonoBehaviour
         if (Input.GetKey(KeyCode.W))
             curspeed *= 2;
 
-        bodyParts[0].Translate(bodyParts[0].forward * curspeed * Time.smoothDeltaTime, Space.World);
+       
 
         if (Input.GetAxis("Horizontal") != 0)
             bodyParts[0].Rotate(Vector3.up * rotationSpeed * Time.deltaTime * Input.GetAxis("Horizontal"));
