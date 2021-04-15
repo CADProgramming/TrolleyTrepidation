@@ -10,7 +10,7 @@ public class TrolleyHandleTrigger : MonoBehaviour
     {
         if (other.name == "Robot")
         {
-            AddBodyPart();
+            transform.parent = other.transform;
         }
         
     }
@@ -31,7 +31,7 @@ public class TrolleyHandleTrigger : MonoBehaviour
 
     public int beginSize;
 
-    public float speed = 1;
+    public float speed = 0;
     public float rotationSpeed = 50;
 
     public GameObject bodyprefabs;
