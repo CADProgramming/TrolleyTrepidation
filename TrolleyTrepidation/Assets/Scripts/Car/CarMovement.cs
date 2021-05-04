@@ -7,30 +7,32 @@ public class CarMovement : MonoBehaviour
 {
     private const float FORWARD_SPEED = 2.0f;
     private const float REVERSE_SPEED = 1.0f;
-    private const float REVERSE_DISTANCE = 2.5f;
-    private const float ROTATION_SPEED = 20.0f;
-    private const float PARK_ROTATION_SPEED = 23.5f;
+    private const float REVERSE_DISTANCE = 3.0f;
+    private const float ROTATION_SPEED = 3.0f;
+    private const float PARK_ROTATION_SPEED = 24.5f;
     private const float VECTOR_MATCH = 0.8f;
-    private const float PARK_VECTOR_MATCH = 0.96f;
+    private const float PARK_VECTOR_MATCH = 0.9f;
     private const float NODE_TOLERANCE = 0.2f;
-    private const float MIN_PARK_DIST = 15.0f;
+    private const float MIN_PARK_DIST = 13.0f;
+    private const float SPEED = 4.0f;
+
 
     public Transform goal;
     public GameObject path;
+    public CarEnteringState enteringState;
+    public CarLeavingState leavingState;
 
     private float degreesOfRotation;
     private bool atNextNode;
     private bool readyToPark;
+    private bool isParking;
     private bool parkClose;
     private Vector3 forwardVector;
     private Vector3 reverseVector;
     private Vector3 reverseLocation;
     private Vector3 parkEntranceLocation;
-    private CarEnteringState enteringState;
-    private CarLeavingState leavingState;
 
     private GameObject nextNode;
-    private NavMeshAgent agent;
 
     void Start()
     {
@@ -38,15 +40,12 @@ public class CarMovement : MonoBehaviour
         atNextNode = true;
         readyToPark = false;
         parkClose = true;
+        isParking = false;
         nextNode = null;
 
-        enteringState = CarEnteringState.AUTO;
-        leavingState = CarLeavingState.STOPPED;
         reverseLocation = transform.position + REVERSE_DISTANCE * (transform.rotation * Vector3.back);
         forwardVector = FORWARD_SPEED * Vector3.forward;
         reverseVector = REVERSE_SPEED * Vector3.back;
-        agent = GetComponent<NavMeshAgent>();
-        agent.enabled = true;
     }
 
     private void Update()
@@ -108,9 +107,9 @@ public class CarMovement : MonoBehaviour
         // Gradually reverse and turn until a degree of rotation is achieved
         if (degreesOfRotation < 60)
         {
-            transform.Rotate(Vector3.up, ROTATION_SPEED * Time.deltaTime);
+            transform.Rotate(Vector3.up, PARK_ROTATION_SPEED * Time.deltaTime);
             transform.position += transform.rotation * reverseVector * Time.deltaTime;
-            degreesOfRotation += ROTATION_SPEED * Time.deltaTime;
+            degreesOfRotation += PARK_ROTATION_SPEED * Time.deltaTime;
         }
         else
         {
@@ -124,14 +123,13 @@ public class CarMovement : MonoBehaviour
         // Gradually move forward and turn until a degree of rotation is achieved
         if (degreesOfRotation < 90)
         {
-            transform.Rotate(Vector3.up, ROTATION_SPEED * Time.deltaTime);
+            transform.Rotate(Vector3.up, PARK_ROTATION_SPEED * Time.deltaTime);
             transform.position += transform.rotation * forwardVector * Time.deltaTime;
-            degreesOfRotation += ROTATION_SPEED * Time.deltaTime;
+            degreesOfRotation += PARK_ROTATION_SPEED * Time.deltaTime;
         }
         else
         {
             leavingState = CarLeavingState.AUTO;
-            agent.enabled = true;
         }
     }
 
@@ -154,16 +152,8 @@ public class CarMovement : MonoBehaviour
         }
         else
         {
-            if (Mathf.Abs(Vector3.Distance(transform.position, goal.position)) > NODE_TOLERANCE)
+            if (Mathf.Abs(Vector3.Distance(transform.position, goal.position)) < NODE_TOLERANCE)
             {
-                agent.angularSpeed = 0;
-                agent.enabled = true;
-                agent.destination = goal.position;
-            }
-            else
-            {
-                agent.angularSpeed = 100;
-                agent.enabled = false;
                 enteringState = CarEnteringState.STOPPED;
             }
         }
@@ -184,7 +174,7 @@ public class CarMovement : MonoBehaviour
                 nextLocation = FindNearestNode();
             }
 
-            agent.destination = nextLocation.position;
+            StartCoroutine(MoveToNode(nextLocation.position));
         }
 
         atNextNode = IsAtNextNode();
@@ -201,7 +191,7 @@ public class CarMovement : MonoBehaviour
 
     private void CheckCanPark()
     {
-        if (Mathf.Abs(Vector3.Distance(transform.position, goal.transform.position)) < MIN_PARK_DIST)
+        if (Mathf.Abs(Vector3.Distance(transform.position, goal.transform.position)) < MIN_PARK_DIST && !isParking)
         {
             ParkNodeController parkInfo = goal.GetComponent<ParkNodeController>();
 
@@ -221,9 +211,10 @@ public class CarMovement : MonoBehaviour
                 parkEntranceLocation = parkInfo.farEntrance;
             }
 
-            if (readyToPark)
+            if (readyToPark && !isParking && (parkClose || canEnterFar))
             {
-                agent.destination = parkEntranceLocation;
+                isParking = true;
+                StartCoroutine(MoveToPark(parkEntranceLocation));
             }
         }
     }
@@ -235,27 +226,73 @@ public class CarMovement : MonoBehaviour
         if (readyToPark && IsAtParkEntrance())
         {
             enteringState = CarEnteringState.FORWARD_TURN;
-            agent.enabled = false;
         }
         else
         {
             if (atNextNode)
             {
-                Transform nextLocation;
+                Vector3 nextLocation;
 
                 if (nextNode)
                 {
-                    nextLocation = FindNextNode();
+                    nextLocation = FindNextNode().position;
                 }
                 else
                 {
-                    nextLocation = FindNearestNode();
+                    nextLocation = FindNearestNode().position;
                 }
-
-                agent.destination = nextLocation.position;
+                StartCoroutine(MoveToNode(nextLocation));
             }
 
             atNextNode = IsAtNextNode();
+        }
+    }
+
+    IEnumerator MoveToPark(Vector3 parkEntrance)
+    {
+        Vector3 forwardVector = SPEED * Vector3.forward;
+        Quaternion rotationBetweenPoints;
+
+        while (Mathf.Abs(Vector3.Distance(parkEntrance, transform.position)) > NODE_TOLERANCE)
+        {
+            rotationBetweenPoints = Quaternion.LookRotation(parkEntrance - transform.position);
+            RotateTowardsNextLocation(rotationBetweenPoints);
+            MoveTowardsNextLocation(forwardVector);
+            yield return null;
+        }
+
+        yield break;
+    }
+
+    IEnumerator MoveToNode(Vector3 nextLocation)
+    {
+        Vector3 forwardVector = SPEED * Vector3.forward;
+        Quaternion rotationBetweenPoints;
+
+        while (Mathf.Abs(Vector3.Distance(nextLocation, transform.position)) > NODE_TOLERANCE && !isParking)
+        {
+            rotationBetweenPoints = Quaternion.LookRotation(nextLocation - transform.position);
+            RotateTowardsNextLocation(rotationBetweenPoints);
+            MoveTowardsNextLocation(forwardVector);
+            yield return null;
+        }
+
+        yield break;
+    }
+
+    private void MoveTowardsNextLocation(Vector3 moveVector)
+    {
+        transform.position += transform.rotation * moveVector * Time.deltaTime;
+    }
+
+    private void RotateTowardsNextLocation(Quaternion rotationAmount)
+    {
+        float angleOfRotation = Quaternion.Angle(transform.rotation, rotationAmount);
+
+        if (Mathf.Abs(angleOfRotation) > 0.1f)
+        {
+            transform.rotation = Quaternion.Lerp(transform.rotation, rotationAmount, Time.deltaTime * ROTATION_SPEED);
+            transform.rotation = Quaternion.Euler(0, transform.rotation.eulerAngles.y, 0);
         }
     }
 
