@@ -92,6 +92,8 @@ GameObject:
   - component: {fileID: 745228173080315591}
   - component: {fileID: -4659294034867482803}
   - component: {fileID: -6079294289994358980}
+  - component: {fileID: 6256970513181037271}
+  - component: {fileID: 6183901116193581436}
   m_Layer: 0
   m_Name: Trolley(Master)
   m_TagString: Untagged
@@ -192,6 +194,32 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!65 &6256970513181037271
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1249583295604156178}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 0.693695, y: 0.62567794, z: 0.7259617}
+  m_Center: {x: 0, y: 0.7840728, z: 0.7819567}
+--- !u!114 &6183901116193581436
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1249583295604156178}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eacece3adb07dd9408c45aae7a8ba68e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  distance: 1.3
 --- !u!1 &1369112827292076457
 GameObject:
   m_ObjectHideFlags: 0

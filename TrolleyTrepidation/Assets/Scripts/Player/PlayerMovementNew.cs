@@ -40,8 +40,7 @@ public class PlayerMovementNew : MonoBehaviour
         if(bodyParts.Contains(other.transform) == false)
         {
             if (other.name.Contains("Trolley"))
-            {
-                
+            {                
                 AddBodyPart(other.gameObject);
             }
         }              
@@ -52,33 +51,40 @@ public class PlayerMovementNew : MonoBehaviour
         
         if (Input.GetKey(KeyCode.LeftArrow))
         {
-            bodyParts[bodyParts.Count - 1].rotation = Quaternion.Euler(0, -90, 0);
+            transform.rotation = Quaternion.Euler(0, transform.rotation.eulerAngles.y - 1, 0);
         }
         if (Input.GetKey(KeyCode.RightArrow))
         {
-            bodyParts[bodyParts.Count - 1].rotation = Quaternion.Euler(0, 90, 0);
+            transform.rotation = Quaternion.Euler(0, transform.rotation.eulerAngles.y + 1, 0);
         }
         if (Input.GetKey(KeyCode.UpArrow))
         {
-            bodyParts[bodyParts.Count - 1].rotation = Quaternion.Euler(0, 0, 0);
+            transform.rotation = Quaternion.Euler(0, 1, 0);
         }
         if (Input.GetKey(KeyCode.DownArrow))
         {
-            bodyParts[bodyParts.Count - 1].rotation = Quaternion.Euler(0, 180, 0);
+            transform.rotation = Quaternion.Euler(0, 180, 0);
         }
 
-        bodyParts[bodyParts.Count - 1].GetComponent<Rigidbody>().velocity = transform.rotation * (MOVE_SPEED * Vector3.forward);
+        transform.GetComponent<Rigidbody>().velocity = transform.rotation * (MOVE_SPEED * Vector3.forward);
         moveTrolley();
     }
     private void moveTrolley()
     {
         float curspeed = speed;
 
-        
+        for(int i = 1; i < (bodyParts.Count); i++)
+        {
+            bodyParts[i].GetComponent<Rigidbody>().velocity = (MOVE_SPEED * Vector3.forward);
+        }
     }
     public void AddBodyPart(GameObject trolley)
     {
         //Transform newpart = (Instantiate(bodyprefabs, bodyParts[bodyParts.Count - 1].transform.position + new Vector3(0,0,distance+bodyParts.Count - 1), bodyParts[bodyParts.Count -1 ].rotation) as GameObject).transform;
-        bodyParts.Add(trolley.transform);     
+        bodyParts.Add(trolley.transform);
+        trolley.transform.parent = transform;
+        trolley.transform.localPosition = new Vector3(0, 0, distance + bodyParts.Count - 1);
+        trolley.transform.localRotation = Quaternion.identity;
+        
     }
 }
