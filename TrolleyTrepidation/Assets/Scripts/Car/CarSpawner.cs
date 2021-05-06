@@ -4,12 +4,12 @@ using UnityEngine;
 
 public class CarSpawner : MonoBehaviour
 {
-    private const int MIN_CARS = 5;
-    private const int MAX_CARS = 20;
+    private const int MIN_CARS = 100;
+    private const int MAX_CARS = 100;
     private const int MIN_TIME = 5;
-    private const int MAX_TIME = 15;
+    private const int MAX_TIME = 5;
 
-    public GameObject carPrefab;
+    public GameObject[] carPrefabs;
     public GameObject spawnNodes;
     public GameObject parkNodes;
     public GameObject[] exitNodes;
@@ -51,10 +51,10 @@ public class CarSpawner : MonoBehaviour
             spaceFree = parkingSpace.isEmpty;
 
         } while (!spaceFree);
-        
+
         parkingSpace.isEmpty = false;
 
-        GameObject carSpawn = Instantiate(carPrefab, spawnPoint);
+        GameObject carSpawn = Instantiate(carPrefabs[Random.Range(0, carPrefabs.Length)], spawnPoint);
         carSpawn.transform.parent = transform;
         CarMovement carMovement = carSpawn.GetComponent<CarMovement>();
         carMovement.enteringState = CarEnteringState.STOPPED;
@@ -84,5 +84,10 @@ public class CarSpawner : MonoBehaviour
     private void EnterCarPark()
     {
 
+    }
+
+    public void CarHasLeft(GameObject car)
+    {
+        cars.Remove(car);
     }
 }

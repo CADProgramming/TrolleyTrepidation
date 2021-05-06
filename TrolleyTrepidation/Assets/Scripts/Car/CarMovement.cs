@@ -8,15 +8,19 @@ public class CarMovement : MonoBehaviour
     private const float FORWARD_SPEED = 2.0f;
     private const float REVERSE_SPEED = 1.0f;
     private const float REVERSE_DISTANCE = 3.0f;
-    private const float ROTATION_SPEED = 3.0f;
+    private const float ROTATION_SPEED = 4.0f;
     private const float PARK_ROTATION_SPEED = 24.5f;
     private const float VECTOR_MATCH = 0.8f;
     private const float PARK_VECTOR_MATCH = 0.9f;
-    private const float NODE_TOLERANCE = 0.2f;
+    private const float NODE_TOLERANCE = 0.3f;
     private const float MIN_PARK_DIST = 13.0f;
     private const float SPEED = 4.0f;
+    private const float DESPAWN_DISTANCE = 2.0f;
 
+    private const float STOPPING_DISTANCE = 10.0f;
+    private const float STOPPING_ANGLE = 100.0f;
 
+    public bool isWaiting;
     public Transform goal;
     public GameObject path;
     public CarEnteringState enteringState;
@@ -41,6 +45,7 @@ public class CarMovement : MonoBehaviour
         readyToPark = false;
         parkClose = true;
         isParking = false;
+        isWaiting = false;
         nextNode = null;
 
         reverseLocation = transform.position + REVERSE_DISTANCE * (transform.rotation * Vector3.back);
@@ -159,25 +164,75 @@ public class CarMovement : MonoBehaviour
         }
     }
 
+    private bool CheckGiveway(Ray checkRay)
+    {
+        RaycastHit collision;
+
+        if (Physics.Raycast(checkRay, out collision))
+        {
+            CarMovement car;
+            bool isCar = collision.transform.gameObject.TryGetComponent(out car);
+
+            if (isCar && car != this)
+            {
+                if (Quaternion.Angle(collision.transform.rotation, transform.rotation) < STOPPING_ANGLE && 
+                    collision.distance < STOPPING_DISTANCE && 
+                    (car.enteringState != CarEnteringState.STOPPED ||
+                    car.leavingState != CarLeavingState.STOPPED))
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            return false;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
     private void FollowPathOut()
     {
-        if (atNextNode)
+        Ray rayForward = new Ray(transform.position + Vector3.up, transform.rotation * new Vector3(0, 0, 1.0f) * STOPPING_DISTANCE);
+        Ray rayLeft = new Ray(transform.position + Vector3.up, transform.rotation * Quaternion.Euler(0, -20.0f, 0) * new Vector3(0, 0, 1.0f) * STOPPING_DISTANCE);
+        Debug.DrawRay(transform.position + Vector3.up, transform.rotation * new Vector3(0, 0, 1.0f) * STOPPING_DISTANCE, Color.red, 0.5f);
+        Debug.DrawRay(transform.position + Vector3.up, transform.rotation * Quaternion.Euler(0, -20.0f, 0) * new Vector3(0, 0, 1.0f) * STOPPING_DISTANCE, Color.red, 0.5f);
+
+        isWaiting = CheckGiveway(rayForward) || CheckGiveway(rayLeft);
+
+        if (!isWaiting)
         {
-            Transform nextLocation;
-
-            if (nextNode)
+            if (Vector3.Distance(transform.position, goal.transform.position) < DESPAWN_DISTANCE)
             {
-                nextLocation = FindNextNode();
-            }
-            else
-            {
-                nextLocation = FindNearestNode();
+                GameObject carSpawner = GameObject.Find("CarSpawner");
+                CarSpawner spawner = carSpawner.GetComponent<CarSpawner>();
+                spawner.CarHasLeft(gameObject);
+                Destroy(gameObject);
             }
 
-            StartCoroutine(MoveToNode(nextLocation.position));
+            if (atNextNode)
+            {
+                Transform nextLocation;
+
+                if (nextNode)
+                {
+                    nextLocation = FindNextNode();
+                }
+                else
+                {
+                    nextLocation = FindNearestNode();
+                }
+
+                StartCoroutine(MoveToNode(nextLocation.position));
+            }
+
+            atNextNode = IsAtNextNode();
         }
-
-        atNextNode = IsAtNextNode();
     }
 
     private bool CanReachGoalEntrance(Vector3 goalEntrance)
@@ -255,9 +310,12 @@ public class CarMovement : MonoBehaviour
 
         while (Mathf.Abs(Vector3.Distance(parkEntrance, transform.position)) > NODE_TOLERANCE)
         {
-            rotationBetweenPoints = Quaternion.LookRotation(parkEntrance - transform.position);
-            RotateTowardsNextLocation(rotationBetweenPoints);
-            MoveTowardsNextLocation(forwardVector);
+            if (!isWaiting)
+            {
+                rotationBetweenPoints = Quaternion.LookRotation(parkEntrance - transform.position);
+                RotateTowardsNextLocation(rotationBetweenPoints);
+                MoveTowardsNextLocation(forwardVector);
+            }
             yield return null;
         }
 
@@ -271,9 +329,12 @@ public class CarMovement : MonoBehaviour
 
         while (Mathf.Abs(Vector3.Distance(nextLocation, transform.position)) > NODE_TOLERANCE && !isParking)
         {
-            rotationBetweenPoints = Quaternion.LookRotation(nextLocation - transform.position);
-            RotateTowardsNextLocation(rotationBetweenPoints);
-            MoveTowardsNextLocation(forwardVector);
+            if (!isWaiting)
+            {
+                rotationBetweenPoints = Quaternion.LookRotation(nextLocation - transform.position);
+                RotateTowardsNextLocation(rotationBetweenPoints);
+                MoveTowardsNextLocation(forwardVector);
+            }
             yield return null;
         }
 
@@ -321,24 +382,39 @@ public class CarMovement : MonoBehaviour
     private Transform FindNearestNode()
     {
         float minDistance = 0;
+        float bestMinDistance = 0;
         GameObject closestNode = null;
+        GameObject bestNode = null;
 
         foreach (Transform node in path.transform)
         {
             float distanceToNode = Vector3.Distance(node.position, transform.position);
             float similarity = Vector3.Dot((node.position - transform.position).normalized, (transform.rotation * Vector3.forward).normalized);
 
-            if ((!closestNode || distanceToNode < minDistance) &&
+            if ((!bestNode || distanceToNode < bestMinDistance) &&
                 similarity > VECTOR_MATCH)
+            {
+                bestMinDistance = distanceToNode;
+                bestNode = node.gameObject;
+            }
+            if (!closestNode || distanceToNode < minDistance)
             {
                 minDistance = distanceToNode;
                 closestNode = node.gameObject;
             }
         }
 
-        nextNode = closestNode;
 
-        return closestNode.transform;
+        if (bestNode == null)
+        {
+            nextNode = closestNode;
+            return closestNode.transform;
+        }
+        else
+        {
+            nextNode = bestNode;
+            return bestNode.transform;
+        }
     }
 
     private bool IsAtNextNode()

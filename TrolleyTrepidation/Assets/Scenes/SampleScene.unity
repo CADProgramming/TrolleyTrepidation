@@ -151,8 +151,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7873e489160e7fd4fb42a19cbfd4c7a4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  carPrefab: {fileID: 2242403593934323705, guid: 033b7220c9bc4914f8b63862f2514e19,
-    type: 3}
+  carPrefabs:
+  - {fileID: 2242403593934323705, guid: 033b7220c9bc4914f8b63862f2514e19, type: 3}
+  - {fileID: 3565063597644575542, guid: 2186c8a16429fc144a42ac8f82ce3553, type: 3}
   spawnNodes: {fileID: 1650984815}
   parkNodes: {fileID: 1752635169}
   exitNodes:
