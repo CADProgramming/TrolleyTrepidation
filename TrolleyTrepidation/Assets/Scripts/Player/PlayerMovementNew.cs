@@ -59,23 +59,21 @@ public class PlayerMovementNew : MonoBehaviour
         }
         if (Input.GetKey(KeyCode.UpArrow))
         {
-            transform.rotation = Quaternion.Euler(0, 1, 0);
+            transform.GetComponent<Rigidbody>().velocity = transform.rotation * (MOVE_SPEED * Vector3.forward);
+            
         }
         if (Input.GetKey(KeyCode.DownArrow))
         {
-            transform.rotation = Quaternion.Euler(0, 180, 0);
+            transform.GetComponent<Rigidbody>().velocity = transform.rotation * (MOVE_SPEED * Vector3.back);
         }
-
-        transform.GetComponent<Rigidbody>().velocity = transform.rotation * (MOVE_SPEED * Vector3.forward);
         moveTrolley();
+
     }
     private void moveTrolley()
     {
-        float curspeed = speed;
-
-        for(int i = 1; i < (bodyParts.Count); i++)
+        for(int i = 0; i < bodyParts.Count; i++)
         {
-            bodyParts[i].GetComponent<Rigidbody>().velocity = (MOVE_SPEED * Vector3.forward);
+            bodyParts[i].transform.GetComponent<Rigidbody>().velocity = transform.GetComponent<Rigidbody>().velocity;
         }
     }
     public void AddBodyPart(GameObject trolley)
@@ -83,7 +81,7 @@ public class PlayerMovementNew : MonoBehaviour
         //Transform newpart = (Instantiate(bodyprefabs, bodyParts[bodyParts.Count - 1].transform.position + new Vector3(0,0,distance+bodyParts.Count - 1), bodyParts[bodyParts.Count -1 ].rotation) as GameObject).transform;
         bodyParts.Add(trolley.transform);
         trolley.transform.parent = transform;
-        trolley.transform.localPosition = new Vector3(0, 0, distance + bodyParts.Count - 1);
+        trolley.transform.localPosition = new Vector3(0, 0, distance + bodyParts.Count);
         trolley.transform.localRotation = Quaternion.identity;
         
     }
