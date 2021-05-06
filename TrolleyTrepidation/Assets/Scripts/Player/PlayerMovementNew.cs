@@ -10,7 +10,7 @@ public class PlayerMovementNew : MonoBehaviour
     private Rigidbody playerBody;
     public List<Transform> bodyParts = new List<Transform>();
 
-    public float minDistance = 0.25f;
+    
     public float distance = 1.3F;
 
     public int beginSize;
@@ -83,6 +83,7 @@ public class PlayerMovementNew : MonoBehaviour
         trolley.transform.parent = transform;
         trolley.transform.localPosition = new Vector3(0, 0, distance + bodyParts.Count);
         trolley.transform.localRotation = Quaternion.identity;
+        //trolley.GetComponent<Rigidbody>().isKinematic = true;
         
     }
 }
