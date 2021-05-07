@@ -67,18 +67,33 @@ public class CarSpawner : MonoBehaviour
         GameObject carToLeave;
         CarMovement carMovement;
         bool carIsParked;
+        int parkedCount = 0;
 
-        do
+        foreach (GameObject car in cars)
         {
-            carToLeave = cars[Random.Range(0, cars.Count)];
-            carMovement = carToLeave.GetComponent<CarMovement>();
+            carMovement = car.GetComponent<CarMovement>();
             carIsParked = carMovement.enteringState == CarEnteringState.STOPPED &&
                 carMovement.leavingState == CarLeavingState.STOPPED;
+            if (carIsParked)
+            {
+                parkedCount++;
+            }
+        }
 
-        } while (!carIsParked);
+        if (parkedCount > 0)
+        {
+            do
+            {
+                carToLeave = cars[Random.Range(0, cars.Count)];
+                carMovement = carToLeave.GetComponent<CarMovement>();
+                carIsParked = carMovement.enteringState == CarEnteringState.STOPPED &&
+                    carMovement.leavingState == CarLeavingState.STOPPED;
 
-        carMovement.goal = exitNodes[Random.Range(0, exitNodes.Length)].transform;
-        carMovement.leavingState = CarLeavingState.REVERSING;
+            } while (!carIsParked);
+
+            carMovement.goal = exitNodes[Random.Range(0, exitNodes.Length)].transform;
+            carMovement.leavingState = CarLeavingState.REVERSING;
+        }
     }
 
     private void EnterCarPark()
