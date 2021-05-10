@@ -48,7 +48,10 @@ public class PlayerMovementNew : MonoBehaviour
 
     private void MovePlayer()
     {
-        
+        if(Input.GetKey(KeyCode.Q))
+        {
+            transform.RotateAround(transform.position, Vector3.up, 20 * Time.deltaTime);
+        }
         if (Input.GetKey(KeyCode.LeftArrow))
         {
             transform.rotation = Quaternion.Euler(0, transform.rotation.eulerAngles.y - 1, 0);
@@ -65,6 +68,7 @@ public class PlayerMovementNew : MonoBehaviour
         if (Input.GetKey(KeyCode.DownArrow))
         {
             transform.GetComponent<Rigidbody>().velocity = transform.rotation * (MOVE_SPEED * Vector3.back);
+            
         }
         moveTrolley();
 
@@ -73,6 +77,7 @@ public class PlayerMovementNew : MonoBehaviour
     {
         for(int i = 0; i < bodyParts.Count; i++)
         {
+            bodyParts[i].transform.localPosition = new Vector3(0, 0, distance + i + 0.4F);
             bodyParts[i].transform.GetComponent<Rigidbody>().velocity = transform.GetComponent<Rigidbody>().velocity;
         }
     }
@@ -81,7 +86,7 @@ public class PlayerMovementNew : MonoBehaviour
         //Transform newpart = (Instantiate(bodyprefabs, bodyParts[bodyParts.Count - 1].transform.position + new Vector3(0,0,distance+bodyParts.Count - 1), bodyParts[bodyParts.Count -1 ].rotation) as GameObject).transform;
         bodyParts.Add(trolley.transform);
         trolley.transform.parent = transform;
-        trolley.transform.localPosition = new Vector3(0, 0, distance + bodyParts.Count);
+        trolley.transform.localPosition = new Vector3(0, 0, distance + bodyParts.Count - 1);
         trolley.transform.localRotation = Quaternion.identity;
         //trolley.GetComponent<Rigidbody>().isKinematic = true;
         
