@@ -8,6 +8,7 @@ public class PlayerMovementNew : MonoBehaviour
     
     Vector3 movementVector;
     private Rigidbody playerBody;
+    public GameObject player;
     public List<Transform> bodyParts = new List<Transform>();
 
     
@@ -20,9 +21,6 @@ public class PlayerMovementNew : MonoBehaviour
 
     public GameObject bodyprefabs;
 
-    private float dis;
-    private Transform curBodyPart;
-    private Transform PrevBodyPart;
 
     // Start is called before the first frame update
     void Start()
@@ -50,25 +48,32 @@ public class PlayerMovementNew : MonoBehaviour
     {
         if(Input.GetKey(KeyCode.Q))
         {
-            transform.RotateAround(transform.position, Vector3.up, 20 * Time.deltaTime);
+            //transform.position = Vector3.Lerp(transform.position, transform.position, );
+            transform.RotateAround(bodyParts[bodyParts.Count / 2].position, Vector3.down, 0.2f);
+        }
+        if (Input.GetKey(KeyCode.E))
+        {
+            //transform.position = Vector3.Lerp(transform.position, transform.position, );
+            transform.RotateAround(bodyParts[bodyParts.Count / 2].position, Vector3.up, 0.2f);
         }
         if (Input.GetKey(KeyCode.LeftArrow))
         {
-            transform.rotation = Quaternion.Euler(0, transform.rotation.eulerAngles.y - 1, 0);
+            //transform.rotation = Quaternion.Euler(0, transform.rotation.eulerAngles.y - 0.2f, 0);
+            transform.GetComponent<Rigidbody>().velocity = transform.rotation * (MOVE_SPEED * Vector3.left);
+
         }
         if (Input.GetKey(KeyCode.RightArrow))
         {
-            transform.rotation = Quaternion.Euler(0, transform.rotation.eulerAngles.y + 1, 0);
+            //transform.rotation = Quaternion.Euler(0, transform.rotation.eulerAngles.y + 0.2f, 0);
+            transform.GetComponent<Rigidbody>().velocity = transform.rotation * (MOVE_SPEED * Vector3.right);
         }
         if (Input.GetKey(KeyCode.UpArrow))
         {
-            transform.GetComponent<Rigidbody>().velocity = transform.rotation * (MOVE_SPEED * Vector3.forward);
-            
+            transform.GetComponent<Rigidbody>().velocity = transform.rotation * (MOVE_SPEED * Vector3.forward);            
         }
         if (Input.GetKey(KeyCode.DownArrow))
         {
             transform.GetComponent<Rigidbody>().velocity = transform.rotation * (MOVE_SPEED * Vector3.back);
-            
         }
         moveTrolley();
 
@@ -77,12 +82,13 @@ public class PlayerMovementNew : MonoBehaviour
     {
         for(int i = 0; i < bodyParts.Count; i++)
         {
-            bodyParts[i].transform.localPosition = new Vector3(0, 0, distance + i + 0.4F);
+            bodyParts[i].transform.localPosition = new Vector3(0, 0, distance + i + 1.0F);
             bodyParts[i].transform.GetComponent<Rigidbody>().velocity = transform.GetComponent<Rigidbody>().velocity;
         }
     }
     public void AddBodyPart(GameObject trolley)
     {
+
         //Transform newpart = (Instantiate(bodyprefabs, bodyParts[bodyParts.Count - 1].transform.position + new Vector3(0,0,distance+bodyParts.Count - 1), bodyParts[bodyParts.Count -1 ].rotation) as GameObject).transform;
         bodyParts.Add(trolley.transform);
         trolley.transform.parent = transform;
