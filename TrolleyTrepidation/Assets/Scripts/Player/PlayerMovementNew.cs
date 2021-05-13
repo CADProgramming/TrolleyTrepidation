@@ -13,10 +13,10 @@ public class PlayerMovementNew : MonoBehaviour
 
     
     public float distance = 1.3F;
-
+    public float speed;
+    private Vector3 oldPosition;
     public int beginSize;
 
-    public float speed = 0;
     public float rotationSpeed = 50;
 
     public GameObject bodyprefabs;
@@ -46,26 +46,37 @@ public class PlayerMovementNew : MonoBehaviour
 
     private void MovePlayer()
     {
-        if(Input.GetKey(KeyCode.Q))
+        if(Input.GetKeyDown(KeyCode.Q))
         {
-            //transform.position = Vector3.Lerp(transform.position, transform.position, );
-            transform.RotateAround(bodyParts[bodyParts.Count / 2].position, Vector3.down, 0.2f);
-        }
-        if (Input.GetKey(KeyCode.E))
-        {
-            //transform.position = Vector3.Lerp(transform.position, transform.position, );
-            transform.RotateAround(bodyParts[bodyParts.Count / 2].position, Vector3.up, 0.2f);
+            bodyParts[bodyParts.Count - 1].parent = null;
+            bodyParts.RemoveAt(bodyParts.Count - 1);
+            
         }
         if (Input.GetKey(KeyCode.LeftArrow))
         {
-            //transform.rotation = Quaternion.Euler(0, transform.rotation.eulerAngles.y - 0.2f, 0);
-            transform.GetComponent<Rigidbody>().velocity = transform.rotation * (MOVE_SPEED * Vector3.left);
+            if(bodyParts.Count <= 0)
+            {
+                transform.rotation = Quaternion.Euler(0, transform.rotation.eulerAngles.y - 0.2f, 0);
+            }
+            else
+            {
+                transform.RotateAround(bodyParts[bodyParts.Count / 2].position, Vector3.down, 0.2f);
+            }
+            //transform.GetComponent<Rigidbody>().velocity = transform.rotation * (MOVE_SPEED * Vector3.left);
 
         }
         if (Input.GetKey(KeyCode.RightArrow))
         {
-            //transform.rotation = Quaternion.Euler(0, transform.rotation.eulerAngles.y + 0.2f, 0);
-            transform.GetComponent<Rigidbody>().velocity = transform.rotation * (MOVE_SPEED * Vector3.right);
+            if(bodyParts.Count <= 0)
+            {
+                transform.rotation = Quaternion.Euler(0, transform.rotation.eulerAngles.y + 0.2f, 0);
+            }
+            else
+            {
+                transform.RotateAround(bodyParts[bodyParts.Count / 2].position, Vector3.up, 0.2f);
+            }
+            
+            //transform.GetComponent<Rigidbody>().velocity = transform.rotation * (MOVE_SPEED * Vector3.right);
         }
         if (Input.GetKey(KeyCode.UpArrow))
         {
@@ -76,7 +87,12 @@ public class PlayerMovementNew : MonoBehaviour
             transform.GetComponent<Rigidbody>().velocity = transform.rotation * (MOVE_SPEED * Vector3.back);
         }
         moveTrolley();
-
+        
+        Debug.Log("X" + transform.GetComponent<Rigidbody>().velocity.x);
+        Debug.Log("Y" + transform.GetComponent<Rigidbody>().velocity.y);
+        Debug.Log("Z" + transform.GetComponent<Rigidbody>().velocity.z);
+        speed = Vector3.Distance(oldPosition, transform.position) * 100f;
+        oldPosition = transform.position;
     }
     private void moveTrolley()
     {
@@ -88,7 +104,6 @@ public class PlayerMovementNew : MonoBehaviour
     }
     public void AddBodyPart(GameObject trolley)
     {
-
         //Transform newpart = (Instantiate(bodyprefabs, bodyParts[bodyParts.Count - 1].transform.position + new Vector3(0,0,distance+bodyParts.Count - 1), bodyParts[bodyParts.Count -1 ].rotation) as GameObject).transform;
         bodyParts.Add(trolley.transform);
         trolley.transform.parent = transform;
