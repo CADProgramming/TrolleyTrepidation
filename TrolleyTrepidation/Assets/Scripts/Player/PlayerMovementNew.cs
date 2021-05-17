@@ -12,7 +12,7 @@ public class PlayerMovementNew : MonoBehaviour
     public List<Transform> bodyParts = new List<Transform>();
 
     
-    public float distance = 1.3F;
+    public float distance = 3.0F;
     public float speed;
     private Vector3 oldPosition;
     public int beginSize;
@@ -50,11 +50,11 @@ public class PlayerMovementNew : MonoBehaviour
         {
             bodyParts[bodyParts.Count - 1].parent = null;
             bodyParts.RemoveAt(bodyParts.Count - 1);
-            
+            player.GetComponent<BoxCollider>().center = player.GetComponent<BoxCollider>().center + Vector3.back;
         }
         if (Input.GetKey(KeyCode.LeftArrow))
         {
-            if(bodyParts.Count <= 0)
+            if((bodyParts.Count <= 0) || speed < 3f)
             {
                 transform.rotation = Quaternion.Euler(0, transform.rotation.eulerAngles.y - 0.2f, 0);
             }
@@ -67,7 +67,7 @@ public class PlayerMovementNew : MonoBehaviour
         }
         if (Input.GetKey(KeyCode.RightArrow))
         {
-            if(bodyParts.Count <= 0)
+            if((bodyParts.Count <= 0) || speed < 3f)
             {
                 transform.rotation = Quaternion.Euler(0, transform.rotation.eulerAngles.y + 0.2f, 0);
             }
@@ -88,17 +88,15 @@ public class PlayerMovementNew : MonoBehaviour
         }
         moveTrolley();
         
-        Debug.Log("X" + transform.GetComponent<Rigidbody>().velocity.x);
-        Debug.Log("Y" + transform.GetComponent<Rigidbody>().velocity.y);
-        Debug.Log("Z" + transform.GetComponent<Rigidbody>().velocity.z);
         speed = Vector3.Distance(oldPosition, transform.position) * 100f;
+        Debug.Log(speed);
         oldPosition = transform.position;
     }
     private void moveTrolley()
     {
         for(int i = 0; i < bodyParts.Count; i++)
         {
-            bodyParts[i].transform.localPosition = new Vector3(0, 0, distance + i + 1.0F);
+            bodyParts[i].transform.localPosition = new Vector3(0, 0, distance + i);
             bodyParts[i].transform.GetComponent<Rigidbody>().velocity = transform.GetComponent<Rigidbody>().velocity;
         }
     }
@@ -109,7 +107,8 @@ public class PlayerMovementNew : MonoBehaviour
         trolley.transform.parent = transform;
         trolley.transform.localPosition = new Vector3(0, 0, distance + bodyParts.Count - 1);
         trolley.transform.localRotation = Quaternion.identity;
-        //trolley.GetComponent<Rigidbody>().isKinematic = true;
+        player.GetComponent<BoxCollider>().center = player.GetComponent<BoxCollider>().center + Vector3.forward;
+        trolley.GetComponent<Rigidbody>().useGravity = false;
         
     }
 }
