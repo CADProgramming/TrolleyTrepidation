@@ -5,16 +5,16 @@ using UnityEngine.AI;
 
 public class CarMovement : MonoBehaviour
 {
-    private const float FORWARD_SPEED = 2.0f;
+    private const float FORWARD_SPEED = 3.5f;
     private const float REVERSE_SPEED = 1.0f;
     private const float REVERSE_DISTANCE = 3.0f;
     private const float ROTATION_SPEED = 4.0f;
     private const float PARK_ROTATION_SPEED = 24.5f;
     private const float VECTOR_MATCH = 0.98f;
-    private const float PARK_VECTOR_MATCH = 0.9f;
+    private const float PARK_VECTOR_MATCH = 0.98f;
     private const float NODE_TOLERANCE = 0.3f;
     private const float MIN_PARK_DIST = 13.0f;
-    private const float MIN_START_DIST = 5.0f;
+    private const float MIN_START_DIST = 0.3f;
     private const float SPEED = 4.0f;
 
     private const float STOPPING_DISTANCE = 11.0f;
@@ -239,7 +239,7 @@ public class CarMovement : MonoBehaviour
     private void FollowPathOut()
     {
         Ray rayForward = new Ray(transform.position + Vector3.up, transform.rotation * Vector3.forward * STOPPING_DISTANCE);
-        Ray rayLeft = new Ray(transform.position + Vector3.up, transform.rotation * Quaternion.Euler(0, -20.0f, 0) * Vector3.forward * STOPPING_DISTANCE);
+        Ray rayLeft = new Ray(transform.position + Vector3.up, transform.rotation * Quaternion.Euler(0, -30.0f, 0) * Vector3.forward * STOPPING_DISTANCE);
         Debug.DrawRay(transform.position + Vector3.up, transform.rotation * Vector3.forward * STOPPING_DISTANCE, Color.red, 0.5f);
         Debug.DrawRay(transform.position + Vector3.up, transform.rotation * Quaternion.Euler(0, -20.0f, 0) * Vector3.forward * STOPPING_DISTANCE, Color.red, 0.5f);
 
@@ -271,11 +271,18 @@ public class CarMovement : MonoBehaviour
 
     private bool CanReachGoalEntrance(Vector3 goalEntrance)
     {
-        float similarity = Vector3.Dot((goalEntrance - transform.position).normalized, (transform.rotation * Vector3.forward).normalized);
+        if (nextNode != null)
+        {
+            float similarity = Vector3.Dot((goalEntrance - transform.position).normalized, (transform.rotation * Vector3.forward).normalized);
 
-        return Mathf.Abs(Vector3.Distance(transform.position, nextNode.transform.position)) >
-            Mathf.Abs(Vector3.Distance(transform.position, goalEntrance)) &&
-            similarity > PARK_VECTOR_MATCH;
+            return Mathf.Abs(Vector3.Distance(transform.position, nextNode.transform.position)) >
+                Mathf.Abs(Vector3.Distance(transform.position, goalEntrance)) &&
+                similarity > PARK_VECTOR_MATCH;
+        }
+        else
+        {
+            return false;
+        }
     }    
 
     private void CheckCanPark()
@@ -310,30 +317,42 @@ public class CarMovement : MonoBehaviour
 
     private void FollowPathIn()
     {
-        CheckCanPark();
+        Ray rayForward = new Ray(transform.position + Vector3.up, transform.rotation * Vector3.forward * STOPPING_DISTANCE);
+        Ray rayLeft = new Ray(transform.position + Vector3.up, transform.rotation * Quaternion.Euler(0, -30.0f, 0) * Vector3.forward * STOPPING_DISTANCE);
+        Debug.DrawRay(transform.position + Vector3.up, transform.rotation * Vector3.forward * STOPPING_DISTANCE, Color.red, 0.5f);
+        Debug.DrawRay(transform.position + Vector3.up, transform.rotation * Quaternion.Euler(0, -20.0f, 0) * Vector3.forward * STOPPING_DISTANCE, Color.red, 0.5f);
 
-        if (readyToPark && IsAtParkEntrance())
+        bool allOtherCarsWaiting = true;
+        isWaiting = CheckGiveway(rayForward, ref allOtherCarsWaiting, STOPPING_DISTANCE) ||
+            CheckGiveway(rayLeft, ref allOtherCarsWaiting, STOPPING_DISTANCE);
+
+        if (!isWaiting)
         {
-            enteringState = CarEnteringState.FORWARD_TURN;
-        }
-        else
-        {
-            if (atNextNode)
+            CheckCanPark();
+
+            if (readyToPark && IsAtParkEntrance())
             {
-                Vector3 nextLocation;
-
-                if (nextNode)
-                {
-                    nextLocation = FindNextNode().position;
-                }
-                else
-                {
-                    nextLocation = FindNearestNode().position;
-                }
-                StartCoroutine(MoveToNode(nextLocation));
+                enteringState = CarEnteringState.FORWARD_TURN;
             }
+            else
+            {
+                if (atNextNode)
+                {
+                    Vector3 nextLocation;
 
-            atNextNode = IsAtNextNode();
+                    if (nextNode)
+                    {
+                        nextLocation = FindNextNode().position;
+                    }
+                    else
+                    {
+                        nextLocation = FindNearestNode().position;
+                    }
+                    StartCoroutine(MoveToNode(nextLocation));
+                }
+
+                atNextNode = IsAtNextNode();
+            }
         }
     }
 
@@ -447,14 +466,20 @@ public class CarMovement : MonoBehaviour
         if (bestNode == null)
         {
             float distanceToNode = Vector3.Distance(transform.position, closestNode.transform.position);
-            if (distanceToNode < MIN_START_DIST) transform.Rotate(new Vector3(0, 0, 180));
+            if (distanceToNode < MIN_START_DIST)
+            {
+                transform.position = closestNode.transform.position;
+            }
             nextNode = closestNode;
             return closestNode.transform;
         }
         else
         {
-            float distanceToNode = Vector3.Distance(transform.position, closestNode.transform.position);
-            if (distanceToNode < MIN_START_DIST) transform.Rotate(new Vector3(0, 0, 180));
+            float distanceToNode = Vector3.Distance(transform.position, bestNode.transform.position);
+            if (distanceToNode < MIN_START_DIST)
+            {
+                transform.position = bestNode.transform.position;
+            }
             nextNode = bestNode;
             return bestNode.transform;
         }

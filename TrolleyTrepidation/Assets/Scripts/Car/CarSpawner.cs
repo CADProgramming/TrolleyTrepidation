@@ -4,10 +4,12 @@ using UnityEngine;
 
 public class CarSpawner : MonoBehaviour
 {
-    private const int MIN_CARS = 100;
-    private const int MAX_CARS = 100;
-    private const int MIN_TIME = 5;
-    private const int MAX_TIME = 5;
+    private const int MIN_CARS = 20;
+    private const int MAX_CARS = 30;
+    private const int MIN_TIME_OUT = 15;
+    private const int MAX_TIME_OUT = 30;
+    private const int MIN_TIME_IN = 20;
+    private const int MAX_TIME_IN = 35;
 
     public GameObject[] carPrefabs;
     public GameObject spawnNodes;
@@ -21,8 +23,8 @@ public class CarSpawner : MonoBehaviour
         cars = new List<GameObject>();
 
         PopulateCarPark();
-        InvokeRepeating("LeaveCarPark", Random.Range(MIN_TIME, MAX_TIME), Random.Range(MIN_TIME, MAX_TIME));
-        InvokeRepeating("EnterCarPark", Random.Range(MIN_TIME, MAX_TIME), Random.Range(MIN_TIME, MAX_TIME));
+        InvokeRepeating("LeaveCarPark", Random.Range(MIN_TIME_OUT, MAX_TIME_OUT), Random.Range(MIN_TIME_OUT, MAX_TIME_OUT));
+        //InvokeRepeating("EnterCarPark", Random.Range(MIN_TIME_IN, MAX_TIME_IN), Random.Range(MIN_TIME_IN, MAX_TIME_IN));
     }
 
     private void PopulateCarPark()
@@ -98,7 +100,26 @@ public class CarSpawner : MonoBehaviour
 
     private void EnterCarPark()
     {
+        GameObject carToEnter = Instantiate(
+            carPrefabs[Random.Range(0, carPrefabs.Length)], 
+            spawnNodes.transform.GetChild(Random.Range(0, spawnNodes.transform.childCount))
+        );
+        CarMovement carMovement;
+        GameObject park;
+        carMovement = carToEnter.GetComponent<CarMovement>();
+        bool parkIsFull;
 
+        do
+        {
+            park = parkNodes.transform.GetChild(Random.Range(0, parkNodes.transform.childCount)).gameObject;
+            ParkNodeController parkInfo = park.GetComponent<ParkNodeController>();
+
+            parkIsFull = !parkInfo.isEmpty;
+
+        } while (parkIsFull);
+
+        carMovement.goal = park.transform;
+        carMovement.enteringState = CarEnteringState.AUTO;
     }
 
     public void CarHasLeft(GameObject car)
