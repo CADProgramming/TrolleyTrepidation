@@ -4,8 +4,10 @@ using UnityEngine;
 
 public class PlayerMovementNew : MonoBehaviour
 {
-    private const float MOVE_SPEED = 5.0f;
-    
+    private const float MAX_SPEED = 64.0f;   // Player top speed
+    private const float ACCEL = 4.0f;      // Player acceleration
+    private const float DEACCEL = 0.02f;    // Player coasting friction
+
     Vector3 movementVector;
     private Rigidbody playerBody;
     public GameObject player;
@@ -46,8 +48,43 @@ public class PlayerMovementNew : MonoBehaviour
 
     private void MovePlayer()
     {
+        // Calculate acceleration and steering based on inputs
+        float motor = ACCEL * Input.GetAxis("Vertical");        
+
+        // Player is moving forward or backwards        
+        if (motor != 0)
+        {
+            speed += motor;
+        }
+        // Player is moving less than the rate of deacceleration
+        else if ((speed > 0 && speed < DEACCEL) ||
+            (speed < 0 && speed > -DEACCEL))
+        {
+            speed = 0;
+        }
+        // Player is rolling backwards
+        else if (speed < 0)
+        {
+            speed += DEACCEL;
+        }
+        // Player is rolling forwards
+        else if (speed > 0)
+        {
+            speed -= DEACCEL;
+        }
+
+        // Forward & backword speed limiter
+        if (speed > MAX_SPEED)
+        {
+            speed = MAX_SPEED;
+        }
+        else if (speed < -MAX_SPEED)
+        {
+            speed = -MAX_SPEED;
+        }
+
         //Temporary code to test dropping trolleys, may be used in later development
-        if(Input.GetKeyDown(KeyCode.Q))
+        if (Input.GetKeyDown(KeyCode.Q))
         {
             bodyParts[bodyParts.Count - 1].parent = null;
             bodyParts.RemoveAt(bodyParts.Count - 1);
@@ -57,14 +94,14 @@ public class PlayerMovementNew : MonoBehaviour
         if (Input.GetKey(KeyCode.LeftArrow))
         {
             //checks if carrying trolleys or if the speed is below a threshold
-            if((bodyParts.Count <= 0) || speed < 3f)
+            if((bodyParts.Count <= 0) || speed < 2f)
             {
-                transform.rotation = Quaternion.Euler(0, transform.rotation.eulerAngles.y - 0.2f, 0);
+                transform.rotation = Quaternion.Euler(0, transform.rotation.eulerAngles.y - 0.4f, 0);
             }
             //rotates the trolleys and robots around the middle point of the amount of trolleys carried
             else
             {
-                transform.RotateAround(bodyParts[bodyParts.Count / 2].position, Vector3.down, 0.2f);
+                transform.RotateAround(bodyParts[bodyParts.Count / 2].position, Vector3.down, 0.4f);
             }
             //transform.GetComponent<Rigidbody>().velocity = transform.rotation * (MOVE_SPEED * Vector3.left);
 
@@ -73,14 +110,14 @@ public class PlayerMovementNew : MonoBehaviour
         if (Input.GetKey(KeyCode.RightArrow))
         {
             //checks if carrying trolleys or if the speed is below a threshold
-            if((bodyParts.Count <= 0) || speed < 3f)
+            if((bodyParts.Count <= 0) || speed < 2f)
             {
-                transform.rotation = Quaternion.Euler(0, transform.rotation.eulerAngles.y + 0.2f, 0);
+                transform.rotation = Quaternion.Euler(0, transform.rotation.eulerAngles.y + 0.4f, 0);
             }
             //roates the trolleys and robots around the middle point of the amount of trolleys carried
             else
             {
-                transform.RotateAround(bodyParts[bodyParts.Count / 2].position, Vector3.up, 0.2f);
+                transform.RotateAround(bodyParts[bodyParts.Count / 2].position, Vector3.up, 0.4f);
             }
             
             //transform.GetComponent<Rigidbody>().velocity = transform.rotation * (MOVE_SPEED * Vector3.right);
@@ -88,19 +125,15 @@ public class PlayerMovementNew : MonoBehaviour
         //applies forward velocity to the player
         if (Input.GetKey(KeyCode.UpArrow))
         {
-            transform.GetComponent<Rigidbody>().velocity = transform.rotation * (MOVE_SPEED * Vector3.forward);            
+            transform.GetComponent<Rigidbody>().velocity += (transform.rotation * (speed * Vector3.forward * Time.deltaTime));            
         }
         //applies backwards velocity to the player
         if (Input.GetKey(KeyCode.DownArrow))
         {
-            transform.GetComponent<Rigidbody>().velocity = transform.rotation * (MOVE_SPEED * Vector3.back);
+            transform.GetComponent<Rigidbody>().velocity -= (transform.rotation * (speed * Vector3.back* Time.deltaTime)) ;
         }
         //moves the trolleys with the player
         moveTrolley();
-        //used to calculate the speed the player is moving
-        speed = Vector3.Distance(oldPosition, transform.position) * 100f;
-        Debug.Log(speed);
-        oldPosition = transform.position;
     }
     private void moveTrolley()
     {
@@ -124,6 +157,6 @@ public class PlayerMovementNew : MonoBehaviour
         player.GetComponent<BoxCollider>().center = player.GetComponent<BoxCollider>().center + Vector3.forward;
         //TEMP CODE, MIGHT BE REMOVED
         trolley.GetComponent<Rigidbody>().useGravity = false;
-        
+        trolley.GetComponent<Rigidbody>().isKinematic = true;
     }
 }
