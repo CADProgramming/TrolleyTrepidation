@@ -11,17 +11,17 @@ public class PlayerMovement : MonoBehaviour
 
     public float speed;     // Player movement speed
 
+    private Rigidbody playerBody;
     private Animator playerAnimator;    // Player animations
 
     private bool isPushingTrolley;  // Is the player attached to a trolley
-    private bool hasCrashed;        // Player has crashed into a fixed obstacle
 
     // Start is called before the first frame update
     void Start()
     {
         isPushingTrolley = false;
-        hasCrashed = false;
 
+        playerBody = GetComponent<Rigidbody>();
         playerAnimator = GetComponent<Animator>();
     }
 
@@ -91,11 +91,7 @@ public class PlayerMovement : MonoBehaviour
             speed = -MAX_SPEED;
         }
 
-        // Only move if not crashed
-        if (!hasCrashed)
-        {
-            transform.Translate(Vector3.forward * speed * Time.deltaTime);
-        }
+        playerBody.MovePosition(playerBody.transform.position + (playerBody.transform.forward * speed * Time.deltaTime));
         transform.Rotate(Vector3.up * steering * Time.deltaTime);
 
         // Update animation variables
@@ -108,42 +104,5 @@ public class PlayerMovement : MonoBehaviour
             playerAnimator.SetBool("isForwardPressed", isForwardPressed);
             playerAnimator.SetBool("isMoving", isMoving);
         }
-
-        // Prevent rolling
-        AntiRoll();
-    }
-
-    // Stops the player rotating on euler axis x or z
-    private void AntiRoll()
-    {
-        if (transform.rotation.eulerAngles.x > 0)
-        {
-            // Set rotation to the same rotation but reset x
-            transform.rotation = Quaternion.Euler(Quaternion.identity.x, transform.rotation.eulerAngles.y, transform.rotation.eulerAngles.z);
-        }
-
-        if (transform.rotation.eulerAngles.z > 0)
-        {
-            // Set rotation to the same rotation but reset z
-            transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, transform.rotation.eulerAngles.y, Quaternion.identity.z);
-        }
-    }
-
-    // When player enters into a collision
-    private void OnCollisionEnter(Collision collision)
-    {
-        // Player hits fixed obstacle
-        if (collision.gameObject.tag == "FixedObstacle")
-        {
-            // Stop moving
-            hasCrashed = true;
-            speed = 0;
-        }
-    }
-
-    // When player exits a collision
-    private void OnCollisionExit(Collision collision)
-    {
-        hasCrashed = false;
     }
 }
