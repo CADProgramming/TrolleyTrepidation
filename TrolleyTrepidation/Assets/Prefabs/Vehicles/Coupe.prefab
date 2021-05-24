@@ -680,6 +680,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 70bd8b040d33ee4489bc5726e23291f4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isWaiting: 0
   goal: {fileID: 0}
   path: {fileID: 6718917395506421304, guid: c7cdfe17c1bcb3d438a10f2a4aa094cb, type: 3}
   enteringState: 0
