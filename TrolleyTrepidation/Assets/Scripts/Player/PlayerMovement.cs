@@ -52,6 +52,7 @@ public class PlayerMovement : MonoBehaviour
 
     }
 
+    
     // Moves the player without a trolley
     private void MovePlayer()
     {
