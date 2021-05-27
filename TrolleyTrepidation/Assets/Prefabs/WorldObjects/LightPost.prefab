@@ -103,6 +103,7 @@ GameObject:
   - component: {fileID: 3694859236686807761}
   - component: {fileID: 353846425748426100}
   - component: {fileID: 2525932504709740990}
+  - component: {fileID: 8706732727065461727}
   m_Layer: 0
   m_Name: LightPost
   m_TagString: Untagged
@@ -172,6 +173,19 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+--- !u!65 &8706732727065461727
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4038908951452555371}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 0.30843106, y: 7.8911276, z: 0.20416869}
+  m_Center: {x: -0.012593791, y: 3.9455638, z: 0.006713435}
 --- !u!1 &5876395711058960998
 GameObject:
   m_ObjectHideFlags: 0
