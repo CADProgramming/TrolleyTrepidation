@@ -98,7 +98,7 @@ public class DayNightCycle : MonoBehaviour
         moon.transform.eulerAngles = (time - 0.75f) * midDay * 4.0f;
 
         sun.intensity = sunIntensity.Evaluate(time);
-        moon.intensity = moonIntensity.Evaluate(time);
+        moon.intensity = moonIntensity.Evaluate(time)*2;
 
         sun.color = sunColour.Evaluate(time);
         moon.color = moonColour.Evaluate(time);
