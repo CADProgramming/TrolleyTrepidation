@@ -1,14 +1,19 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.UI;
 using UnityEngine;
+
 public class PlayerMovementNew : MonoBehaviour
 {
     private const float MOVE_SPEED = 10.0f;
 
-    Vector3 movementVector;
-    private Rigidbody playerBody;
+    public GameObject score;
+    public GameObject trolleysUICounter;
+    public GameObject trolleyGraphic;
+
+
     public GameObject player;
-    public List<Transform> bodyParts = new List<Transform>();
+    public List<Transform> trolleysGrabbed = new List<Transform>();
 
     public float distance = 2F;
     public float speed;
@@ -18,7 +23,7 @@ public class PlayerMovementNew : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        playerBody = GetComponent<Rigidbody>();
+        
     }
     // Update is called once per frame
     void Update()
@@ -27,7 +32,7 @@ public class PlayerMovementNew : MonoBehaviour
     }
     public void OnTriggerEnter(Collider other)
     {
-        if (bodyParts.Contains(other.transform) == false)
+        if (trolleysGrabbed.Contains(other.transform) == false)
         {
             if (other.name.Contains("Trolley"))
             {
@@ -41,22 +46,22 @@ public class PlayerMovementNew : MonoBehaviour
         //Temporary code to test dropping trolleys, may be used in later development
         if (Input.GetKeyDown(KeyCode.Q))
         {
-            bodyParts[bodyParts.Count - 1].parent = null;
-            bodyParts.RemoveAt(bodyParts.Count - 1);
+            trolleysGrabbed[trolleysGrabbed.Count - 1].parent = null;
+            trolleysGrabbed.RemoveAt(trolleysGrabbed.Count - 1);
             player.GetComponent<BoxCollider>().center = player.GetComponent<BoxCollider>().center + Vector3.back;
         }
         //code for turning left
         if (Input.GetKey(KeyCode.LeftArrow))
         {
             //checks if carrying trolleys or if the speed is below a threshold
-            if ((bodyParts.Count <= 0) || speed < 4f)
+            if ((trolleysGrabbed.Count <= 0) || speed < 2f)
             {
                 transform.rotation = Quaternion.Euler(0, transform.rotation.eulerAngles.y - 0.2f, 0);
             }
             //rotates the trolleys and robots around the middle point of the amount of trolleys carried
             else
             {
-                transform.RotateAround(bodyParts[bodyParts.Count / 2].position, Vector3.down, 0.2f);
+                transform.RotateAround(trolleysGrabbed[trolleysGrabbed.Count / 2].position, Vector3.down, 0.2f);
             }
             //transform.GetComponent<Rigidbody>().velocity = transform.rotation * (MOVE_SPEED * Vector3.left);
 
@@ -65,14 +70,14 @@ public class PlayerMovementNew : MonoBehaviour
         if (Input.GetKey(KeyCode.RightArrow))
         {
             //checks if carrying trolleys or if the speed is below a threshold
-            if ((bodyParts.Count <= 0))
+            if ((trolleysGrabbed.Count <= 0) || speed < 2f)
             {
                 transform.rotation = Quaternion.Euler(0, transform.rotation.eulerAngles.y + 0.2f, 0);
             }
             //roates the trolleys and robots around the middle point of the amount of trolleys carried
             else
             {
-                transform.RotateAround(bodyParts[bodyParts.Count / 2].position, Vector3.up, 0.2f);
+                transform.RotateAround(trolleysGrabbed[trolleysGrabbed.Count / 2].position, Vector3.up, 0.2f);
             }
 
             //transform.GetComponent<Rigidbody>().velocity = transform.rotation * (MOVE_SPEED * Vector3.right);
@@ -88,7 +93,7 @@ public class PlayerMovementNew : MonoBehaviour
             transform.GetComponent<Rigidbody>().velocity = transform.rotation * (MOVE_SPEED * Vector3.back);
         }
         //moves the trolleys with the player
-        //moveTrolley();
+        moveTrolley();
 
         //used to calculate the speed the player is moving
         speed = Vector3.Distance(oldPosition, transform.position) * 100f;
@@ -98,8 +103,16 @@ public class PlayerMovementNew : MonoBehaviour
     private void moveTrolley()
     {
         
-        for (int i = 0; i < bodyParts.Count; i++)
+        for (int i = 0; i < trolleysGrabbed.Count; i++)
         {
+            if (trolleysGrabbed[i] == null)
+            {
+                Debug.Log(score.GetComponent<Text>().text);
+                score.GetComponent<Text>().text = (double.Parse(score.GetComponent<Text>().text) + 100.00).ToString();
+                trolleysUICounter.GetComponent<Text>().text = (int.Parse(trolleysUICounter.GetComponent<Text>().text) -1).ToString();
+                trolleysGrabbed.RemoveAt(i);
+                player.GetComponent<BoxCollider>().center = player.GetComponent<BoxCollider>().center + Vector3.back;
+            }
             //bodyParts[i].transform.localPosition = new Vector3(0, 0,distance + i);
             //bodyParts[i].transform.GetComponent<Rigidbody>().velocity = transform.GetComponent<Rigidbody>().velocity;
         }
@@ -107,11 +120,11 @@ public class PlayerMovementNew : MonoBehaviour
     public void AddBodyPart(GameObject trolley)
     {
         //adds the trolley transform to the array
-        bodyParts.Add(trolley.transform);
+        trolleysGrabbed.Add(trolley.transform);
         //sets the trolleys parent to the players
         trolley.transform.parent = transform;
         // updates the trolleys postion to infront of the player
-        trolley.transform.localPosition = new Vector3(0, 0, distance + bodyParts.Count - 1);
+        trolley.transform.localPosition = new Vector3(0, 0, distance + trolleysGrabbed.Count - 1);
         trolley.transform.localRotation = Quaternion.identity;
         //update the collision box to allow for picking up another trolley
         player.GetComponent<BoxCollider>().center = player.GetComponent<BoxCollider>().center + Vector3.forward;
