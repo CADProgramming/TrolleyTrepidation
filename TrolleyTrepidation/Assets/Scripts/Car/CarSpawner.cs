@@ -8,8 +8,9 @@ public class CarSpawner : MonoBehaviour
     private const int MAX_CARS = 30;
     private const int MIN_TIME_OUT = 15;
     private const int MAX_TIME_OUT = 30;
-    private const int MIN_TIME_IN = 20;
-    private const int MAX_TIME_IN = 35;
+    private const int MIN_TIME_IN = 15;
+    private const int MAX_TIME_IN = 30;
+    private const float SPAWN_DISTANCE = 30f;
 
     public GameObject[] carPrefabs;
     public GameObject spawnNodes;
@@ -17,14 +18,17 @@ public class CarSpawner : MonoBehaviour
     public GameObject[] exitNodes;
     public List<GameObject> cars;
 
+    private bool allParksFull;
+
     // Start is called before the first frame update
     void Start()
     {
         cars = new List<GameObject>();
+        allParksFull = false;
 
         PopulateCarPark();
         InvokeRepeating("LeaveCarPark", Random.Range(MIN_TIME_OUT, MAX_TIME_OUT), Random.Range(MIN_TIME_OUT, MAX_TIME_OUT));
-        //InvokeRepeating("EnterCarPark", Random.Range(MIN_TIME_IN, MAX_TIME_IN), Random.Range(MIN_TIME_IN, MAX_TIME_IN));
+        InvokeRepeating("EnterCarPark", Random.Range(MIN_TIME_IN, MAX_TIME_IN), Random.Range(MIN_TIME_IN, MAX_TIME_IN));
     }
 
     private void PopulateCarPark()
@@ -38,6 +42,25 @@ public class CarSpawner : MonoBehaviour
         
     }
 
+    private void CheckAllParksFull()
+    {
+        bool allFull = true;
+
+        foreach (Transform park in parkNodes.transform)
+        {
+            ParkNodeController parkInfo = park.GetComponent<ParkNodeController>();
+            float distanceToPlayer = Vector3.Distance(park.transform.position, GameObject.FindGameObjectWithTag("Player").transform.position);
+
+            if (parkInfo.isEmpty && distanceToPlayer >= SPAWN_DISTANCE)
+            {
+                allFull = false;
+                break;
+            }
+        }
+
+        allParksFull = allFull;
+    }
+
     private void SpawnParkedCar()
     {
         int spawnPointIndex;
@@ -45,23 +68,28 @@ public class CarSpawner : MonoBehaviour
         Transform spawnPoint;
         ParkNodeController parkingSpace;
 
-        do
+        if (!allParksFull)
         {
-            spawnPointIndex = Random.Range(0, parkNodes.transform.childCount);
-            spawnPoint = parkNodes.transform.GetChild(spawnPointIndex);
-            parkingSpace = spawnPoint.GetComponent<ParkNodeController>();
-            spaceFree = parkingSpace.isEmpty;
+            do
+            {
+                spawnPointIndex = Random.Range(0, parkNodes.transform.childCount);
+                spawnPoint = parkNodes.transform.GetChild(spawnPointIndex);
+                parkingSpace = spawnPoint.GetComponent<ParkNodeController>();
+                spaceFree = parkingSpace.isEmpty;
 
-        } while (!spaceFree);
+            } while (!spaceFree);
 
-        parkingSpace.isEmpty = false;
+            parkingSpace.isEmpty = false;
 
-        GameObject carSpawn = Instantiate(carPrefabs[Random.Range(0, carPrefabs.Length)], spawnPoint);
-        carSpawn.transform.parent = transform;
-        CarMovement carMovement = carSpawn.GetComponent<CarMovement>();
-        carMovement.enteringState = CarEnteringState.STOPPED;
-        carMovement.leavingState = CarLeavingState.STOPPED;
-        cars.Add(carSpawn);
+            GameObject carSpawn = Instantiate(carPrefabs[Random.Range(0, carPrefabs.Length)], spawnPoint);
+            carSpawn.transform.parent = transform;
+            CarMovement carMovement = carSpawn.GetComponent<CarMovement>();
+            carMovement.park = parkingSpace;
+            carMovement.leavingState = CarLeavingState.STOPPED;
+            cars.Add(carSpawn);
+        }
+
+        CheckAllParksFull();
     }
 
     private void LeaveCarPark()
@@ -74,8 +102,7 @@ public class CarSpawner : MonoBehaviour
         foreach (GameObject car in cars)
         {
             carMovement = car.GetComponent<CarMovement>();
-            carIsParked = carMovement.enteringState == CarEnteringState.STOPPED &&
-                carMovement.leavingState == CarLeavingState.STOPPED;
+            carIsParked = carMovement.leavingState == CarLeavingState.STOPPED;
             if (carIsParked)
             {
                 parkedCount++;
@@ -88,8 +115,7 @@ public class CarSpawner : MonoBehaviour
             {
                 carToLeave = cars[Random.Range(0, cars.Count)];
                 carMovement = carToLeave.GetComponent<CarMovement>();
-                carIsParked = carMovement.enteringState == CarEnteringState.STOPPED &&
-                    carMovement.leavingState == CarLeavingState.STOPPED;
+                carIsParked =  carMovement.leavingState == CarLeavingState.STOPPED;
 
             } while (!carIsParked);
 
@@ -100,26 +126,37 @@ public class CarSpawner : MonoBehaviour
 
     private void EnterCarPark()
     {
-        GameObject carToEnter = Instantiate(
-            carPrefabs[Random.Range(0, carPrefabs.Length)], 
-            spawnNodes.transform.GetChild(Random.Range(0, spawnNodes.transform.childCount))
-        );
-        CarMovement carMovement;
         GameObject park;
-        carMovement = carToEnter.GetComponent<CarMovement>();
+        ParkNodeController parkInfo;
+
         bool parkIsFull;
+        float distanceToPlayer;
 
-        do
+        if (!allParksFull)
         {
-            park = parkNodes.transform.GetChild(Random.Range(0, parkNodes.transform.childCount)).gameObject;
-            ParkNodeController parkInfo = park.GetComponent<ParkNodeController>();
+            do
+            {
+                park = parkNodes.transform.GetChild(Random.Range(0, parkNodes.transform.childCount)).gameObject;
+                parkInfo = park.GetComponent<ParkNodeController>();
+                distanceToPlayer = Vector3.Distance(park.transform.position, GameObject.FindGameObjectWithTag("Player").transform.position);
 
-            parkIsFull = !parkInfo.isEmpty;
+                parkIsFull = !parkInfo.isEmpty;
 
-        } while (parkIsFull);
+            } while (parkIsFull || distanceToPlayer < SPAWN_DISTANCE);
 
-        carMovement.goal = park.transform;
-        carMovement.enteringState = CarEnteringState.AUTO;
+            GameObject carSpawn = Instantiate(
+            carPrefabs[Random.Range(0, carPrefabs.Length)],
+            park.transform
+        );
+
+            cars.Add(carSpawn);
+
+            CarMovement carMovement = carSpawn.GetComponent<CarMovement>();
+            carMovement.park = parkInfo;
+            carMovement.park.isEmpty = false;
+        }
+        
+        CheckAllParksFull();
     }
 
     public void CarHasLeft(GameObject car)

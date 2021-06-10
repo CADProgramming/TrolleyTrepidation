@@ -6,6 +6,7 @@ TagManager:
   tags:
   - FixedObstacle
   - Trolley
+  - Lamp
   layers:
   - Default
   - TransparentFX

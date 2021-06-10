@@ -24,18 +24,15 @@ public class CarMovement : MonoBehaviour
     public bool isWaiting;
     public Transform goal;
     public GameObject path;
-    public CarEnteringState enteringState;
+    public ParkNodeController park;
     public CarLeavingState leavingState;
 
     private float degreesOfRotation;
     private float distanceReversed;
     private bool atNextNode;
-    private bool readyToPark;
     private bool isParking;
-    private bool parkClose;
     private Vector3 forwardVector;
     private Vector3 reverseVector;
-    private Vector3 parkEntranceLocation;
 
     private GameObject nextNode;
 
@@ -44,8 +41,6 @@ public class CarMovement : MonoBehaviour
         degreesOfRotation = 0;
         distanceReversed = 0;
         atNextNode = true;
-        readyToPark = false;
-        parkClose = true;
         isParking = false;
         isWaiting = false;
         nextNode = null;
@@ -56,21 +51,7 @@ public class CarMovement : MonoBehaviour
 
     private void Update()
     {
-        if (enteringState != CarEnteringState.STOPPED)
-        {
-            switch (enteringState)
-            {
-                // Car navigating car park
-                case CarEnteringState.AUTO:
-                    FollowPathIn();
-                    break;
-                // Car moving forward and turning to enter park
-                case CarEnteringState.FORWARD_TURN:
-                    EnterPark();
-                    break;
-            }
-        }
-        else if (leavingState != CarLeavingState.STOPPED)
+        if (leavingState != CarLeavingState.STOPPED)
         {
             switch (leavingState)
             {
@@ -149,32 +130,6 @@ public class CarMovement : MonoBehaviour
         }
     }
 
-    private void EnterPark()
-    {
-        // Gradually move forward and turn until a degree of rotation is achieved
-        if (degreesOfRotation < 90)
-        {
-            if (parkClose)
-            {
-                transform.Rotate(Vector3.up, -PARK_ROTATION_SPEED * Time.deltaTime);
-                transform.position += transform.rotation * forwardVector * Time.deltaTime;
-            }
-            else
-            {
-                transform.Rotate(Vector3.up, PARK_ROTATION_SPEED * Time.deltaTime);
-                transform.position += transform.rotation * (forwardVector * 1.65f) * Time.deltaTime;
-            }
-            degreesOfRotation += PARK_ROTATION_SPEED * Time.deltaTime;
-        }
-        else
-        {
-            if (Mathf.Abs(Vector3.Distance(transform.position, goal.position)) < NODE_TOLERANCE)
-            {
-                enteringState = CarEnteringState.STOPPED;
-            }
-        }
-    }
-
     private bool CheckPathIsBlocked(Ray checkRay, float distanceToNode)
     {
         RaycastHit collision;
@@ -185,7 +140,6 @@ public class CarMovement : MonoBehaviour
             bool isCar = collision.transform.gameObject.TryGetComponent(out car);
 
             if (isCar && collision.distance <= distanceToNode &&
-                car.enteringState == CarEnteringState.STOPPED &&
                 car.leavingState == CarLeavingState.STOPPED)
             {
                 return true;
@@ -217,8 +171,7 @@ public class CarMovement : MonoBehaviour
 
                 if ((angleBetweenCars < STOPPING_ANGLE || (angleBetweenCars >= STOPPING_ANGLE && !allOtherWaiting)) && 
                     collision.distance < stoppingDistance && 
-                    (car.enteringState != CarEnteringState.STOPPED ||
-                    car.leavingState != CarLeavingState.STOPPED))
+                    car.leavingState != CarLeavingState.STOPPED)
                 {
                     return true;
                 }
@@ -269,111 +222,6 @@ public class CarMovement : MonoBehaviour
         }
     }
 
-    private bool CanReachGoalEntrance(Vector3 goalEntrance)
-    {
-        if (nextNode != null)
-        {
-            float similarity = Vector3.Dot((goalEntrance - transform.position).normalized, (transform.rotation * Vector3.forward).normalized);
-
-            return Mathf.Abs(Vector3.Distance(transform.position, nextNode.transform.position)) >
-                Mathf.Abs(Vector3.Distance(transform.position, goalEntrance)) &&
-                similarity > PARK_VECTOR_MATCH;
-        }
-        else
-        {
-            return false;
-        }
-    }    
-
-    private void CheckCanPark()
-    {
-        if (Mathf.Abs(Vector3.Distance(transform.position, goal.transform.position)) < MIN_PARK_DIST && !isParking)
-        {
-            ParkNodeController parkInfo = goal.GetComponent<ParkNodeController>();
-
-            bool canEnterClose = CanReachGoalEntrance(parkInfo.closeEntrance);
-            bool canEnterFar = CanReachGoalEntrance(parkInfo.farEntrance);
-            readyToPark = canEnterClose || canEnterFar;
-            parkClose = canEnterClose &&
-                Mathf.Abs(Vector3.Distance(transform.position, parkInfo.closeEntrance)) <
-                Mathf.Abs(Vector3.Distance(transform.position, parkInfo.farEntrance));
-
-            if (parkClose)
-            {
-                parkEntranceLocation = parkInfo.closeEntrance;
-            }
-            else if (canEnterFar)
-            {
-                parkEntranceLocation = parkInfo.farEntrance;
-            }
-
-            if (readyToPark && !isParking && (parkClose || canEnterFar))
-            {
-                isParking = true;
-                StartCoroutine(MoveToPark(parkEntranceLocation));
-            }
-        }
-    }
-
-    private void FollowPathIn()
-    {
-        Ray rayForward = new Ray(transform.position + Vector3.up, transform.rotation * Vector3.forward * STOPPING_DISTANCE);
-        Ray rayLeft = new Ray(transform.position + Vector3.up, transform.rotation * Quaternion.Euler(0, -30.0f, 0) * Vector3.forward * STOPPING_DISTANCE);
-        Debug.DrawRay(transform.position + Vector3.up, transform.rotation * Vector3.forward * STOPPING_DISTANCE, Color.red, 0.5f);
-        Debug.DrawRay(transform.position + Vector3.up, transform.rotation * Quaternion.Euler(0, -20.0f, 0) * Vector3.forward * STOPPING_DISTANCE, Color.red, 0.5f);
-
-        bool allOtherCarsWaiting = true;
-        isWaiting = CheckGiveway(rayForward, ref allOtherCarsWaiting, STOPPING_DISTANCE) ||
-            CheckGiveway(rayLeft, ref allOtherCarsWaiting, STOPPING_DISTANCE);
-
-        if (!isWaiting)
-        {
-            CheckCanPark();
-
-            if (readyToPark && IsAtParkEntrance())
-            {
-                enteringState = CarEnteringState.FORWARD_TURN;
-            }
-            else
-            {
-                if (atNextNode)
-                {
-                    Vector3 nextLocation;
-
-                    if (nextNode)
-                    {
-                        nextLocation = FindNextNode().position;
-                    }
-                    else
-                    {
-                        nextLocation = FindNearestNode().position;
-                    }
-                    StartCoroutine(MoveToNode(nextLocation));
-                }
-
-                atNextNode = IsAtNextNode();
-            }
-        }
-    }
-
-    IEnumerator MoveToPark(Vector3 parkEntrance)
-    {
-        Vector3 forwardVector = SPEED * Vector3.forward;
-        Quaternion rotationBetweenPoints;
-
-        while (Mathf.Abs(Vector3.Distance(parkEntrance, transform.position)) > NODE_TOLERANCE)
-        {
-            if (!isWaiting)
-            {
-                rotationBetweenPoints = Quaternion.LookRotation(parkEntrance - transform.position);
-                RotateTowardsNextLocation(rotationBetweenPoints);
-                MoveTowardsNextLocation(forwardVector);
-            }
-            yield return null;
-        }
-
-        yield break;
-    }
 
     IEnumerator MoveToNode(Vector3 nextLocation)
     {
@@ -491,17 +339,12 @@ public class CarMovement : MonoBehaviour
         return distanceToNextNode < NODE_TOLERANCE;
     }
 
-    private bool IsAtParkEntrance()
-    {
-        float distanceToNextNode = Mathf.Abs(Vector3.Distance(transform.position, parkEntranceLocation));
-        return distanceToNextNode < NODE_TOLERANCE;
-    }
-
     public void DeSpawn()
     {
         GameObject carSpawner = GameObject.Find("CarSpawner");
         CarSpawner spawner = carSpawner.GetComponent<CarSpawner>();
         spawner.CarHasLeft(gameObject);
+        park.isEmpty = true;
         Destroy(gameObject);
     }
 }
